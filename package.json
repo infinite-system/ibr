@@ -1,0 +1,38 @@
+{
+  "name": "@invariantai/ibr",
+  "version": "0.1.0",
+  "description": "Invariant-Based Reasoning (IBR) — the framework plus the /ibr and /invariants Claude skills.",
+  "type": "module",
+  "bin": {
+    "ibr": "bin/ibr.mjs"
+  },
+  "files": [
+    "IBR.md",
+    "skills",
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "ibr",
+    "invariant-based-reasoning",
+    "reasoning",
+    "invariants",
+    "claude",
+    "claude-code",
+    "skill"
+  ],
+  "author": "Evgeny Kalashnikov <ekalashnikov@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/infinite-system/ibr#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/infinite-system/ibr.git"
+  },
+  "bugs": {
+    "url": "https://github.com/infinite-system/ibr/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
