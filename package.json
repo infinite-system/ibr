@@ -1,6 +1,6 @@
 {
   "name": "@ibr-foundation/ibr",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Invariant-Based Reasoning (IBR) — the framework plus the /ibr and /invariants Claude skills.",
   "type": "module",
   "bin": {
