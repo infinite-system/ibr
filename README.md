@@ -15,8 +15,8 @@ that put it to work.
 ## Install the skills into a project
 
 ```bash
-npx @invariantai/ibr install          # into ./.claude/skills
-npx @invariantai/ibr install path/to/project
+npx @ibr-foundation/ibr install          # into ./.claude/skills
+npx @ibr-foundation/ibr install path/to/project
 ```
 
 Then invoke `/ibr` or `/invariants` in Claude Code, or read `IBR.md` directly.
@@ -26,8 +26,8 @@ Then invoke `/ibr` or `/invariants` in Claude Code, or read `IBR.md` directly.
 The checker is a single-file Node script (>=18, no dependencies):
 
 ```bash
-npx @invariantai/ibr check --all      # validate every *.invariants.md in the checkout
-npx @invariantai/ibr check --refs     # check code annotations + lattice links
+npx @ibr-foundation/ibr check --all      # validate every *.invariants.md in the checkout
+npx @ibr-foundation/ibr check --refs     # check code annotations + lattice links
 ```
 
 ## Versioning

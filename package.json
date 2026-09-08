@@ -1,10 +1,16 @@
 {
-  "name": "@invariantai/ibr",
+  "name": "@ibr-foundation/ibr",
   "version": "0.1.0",
   "description": "Invariant-Based Reasoning (IBR) — the framework plus the /ibr and /invariants Claude skills.",
   "type": "module",
   "bin": {
     "ibr": "bin/ibr.mjs"
+  },
+  "scripts": {
+    "sync": "bash ../tools/sync-release.sh",
+    "release:patch": "bash ../tools/release.sh patch",
+    "release:minor": "bash ../tools/release.sh minor",
+    "release:major": "bash ../tools/release.sh major"
   },
   "files": [
     "IBR.md",

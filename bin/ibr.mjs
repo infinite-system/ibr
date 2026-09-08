@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // CLI for the IBR package.
 //
-//   npx @invariantai/ibr install [target]   copy the /ibr + /invariants skills
+//   npx @ibr-foundation/ibr install [target]   copy the /ibr + /invariants skills
 //                                             into <target>/.claude/skills (default: cwd)
-//   npx @invariantai/ibr check [args...]     run the invariants contract checker
-//   npx @invariantai/ibr help                usage
+//   npx @ibr-foundation/ibr check [args...]     run the invariants contract checker
+//   npx @ibr-foundation/ibr help                usage
 //
 // Zero dependencies. The skills and framework doc ship alongside this file.
 import { fileURLToPath } from 'node:url';

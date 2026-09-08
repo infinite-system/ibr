@@ -8,6 +8,14 @@ A method of reducing any conceptual problem to the irreducible structures that o
 
 Reality contains the correct invariant structure for any well-posed domain. We only need to remove the illusions hiding it. IBR aims to align with the reality of the problem space, not a metaphor of it.
 
+## Meta-Generator
+
+A good model is the smallest structure that preserves everything the domain can actually generate, excludes what the domain cannot generate, and keeps surviving contact with variation.
+
+## Meta-Operator
+
+Reduce to the smallest generator that preserves all valid structure, excludes the impossible, and survives reality.
+
 ## Core Axioms
 
 ### Axiom — Reality Has Invariants ^reality-invariants
@@ -106,6 +114,48 @@ Invariants generate not only within their own domain but across levels. Each inv
 
 Apparent conflicts between concepts are diagnostic of incomplete surface-level understanding. At the invariant level, true generators cohere. If two honestly reduced invariants genuinely contradict, at least one reduction is incomplete.
 
+### Axiom — The Component Principle^component-principle
+
+A candidate generator must be decomposed into the smallest components, relations, and scope conditions that carry its generative function. A generator treated as indivisible cannot be fully reduced because its internal load-bearing structure remains hidden.
+
+Attack each component and relation through deletion, substitution, transformation, and dependency testing. If removing or replacing an element leaves valid generation and the impossibility boundary unchanged, that element is not fundamental. If altering a relation breaks the generator, the relation itself is load-bearing.
+
+A generator is provisionally established only when every retained component, relation, and scope condition has a demonstrated structural role.
+
+**Canonical form:** Decompose the generator. Attack every part. Retain only what the domain cannot lose without breaking generation or admitting the impossible.
+
+**Compression:** A structure is only as fundamental as its least-tested component.
+
+### Axiom — Invariants as Components^invariants-as-components
+
+An invariant established at one structural level can become a load-bearing component of a higher-order generator.
+
+Components are therefore not necessarily primitive or one-off. A component may itself be an invariant with its own generator, relations, scope conditions, and impossibility boundary.
+
+This creates layered structural dependence:
+
+**more fundamental invariant → component of higher-order generator → higher-order invariant → component of further generators**
+
+Higher-order invariants do not replace the invariants beneath them. They arise by combining, constraining, or relating lower-level invariants in ways that generate new structure.
+
+When an established invariant functions as a component, its internal proof may be inherited rather than repeated, but its role in the higher-order generator must still be tested:
+
+- Is the invariant actually required?
+- Which of its properties are load-bearing here?
+- Does the higher-order generator depend on the whole invariant or only one consequence of it?
+- If its scope changes, does the higher-order invariant narrow, deform, or fail?
+- Can a deeper invariant replace several components at once and further reduce the generator?
+
+Structural precedence follows dependency, not hierarchy. An invariant is more fundamental relative to another when the higher structure depends on it while it does not depend on the higher structure.
+
+This produces not a flat collection of invariants, but a compositional architecture in which established generators become foundations for further derivation.
+
+**Canonical form:**  
+An invariant may function as a component of another invariant. Generators compose into higher-order generators wherever real structural dependency exists.
+
+**Compression:**  
+What is a generator at one level can be a component at the next.
+
 ### Axiom — The Proof Principle ^proof-principle
 
 IBR establishes invariants through two complementary proof modes:
@@ -166,6 +216,21 @@ Either way the structure is real: found, not invented, and you can be wrong abou
 
 **So:** identify the right scope — chess rules aren't laws of nature, fairness wasn't decreed, physics isn't up for a vote. Finding what fairness *is* binds no one by itself to be fair — IBR's normative work is engineering on what it finds, not deriving obligations. Domains agree only where their "ifs" overlap — never at the level of free choices.
 
+### Axiom — Observer Principle ^observer-principle
+
+Reasoning requires observation of the variation against which its invariants are claimed to hold.
+
+An invariant cannot be established by reduction alone. It gains meaning only relative to a field of variation: what changes, what remains, what contradicts expectation, and what follows when conditions differ. Observation tracks counterexamples and contradictions, but also the substrate on which an invariant depends.
+
+This substrate matters because invariants are not necessarily absolute across every transformation. When the underlying conditions change, the invariants that hold above them may need to shift in scope, form, or expression. Observation therefore includes the if–then dynamics between layers: if the substrate changes, what derived regularities still hold, which ones deform, and which ones cease to be invariant.
+
+Observation closes the reasoning loop. A proposed invariant generates structure and predicts how reality should behave across variation, including what should become impossible if the invariant is true. Continued observation tests those consequences. Counterexamples and contradictions are evidence that the invariant is false, incomplete, incorrectly scoped, or that its substrate has changed.
+
+The observer need not be separate from the reasoner. Observation is a role within reasoning: maintaining contact with the domain strongly enough that unexplained variance can challenge the current model and substrate shifts can be distinguished from failures of reasoning.
+
+Understanding cannot be established once and then assumed. It remains conditional on the invariant continuing to account for observed variation within the substrate on which it depends.
+
+Reasoning advances through the closed relation between observation, reduction, generation, prediction, and renewed observation.
 
 ## Operators
 
@@ -195,7 +260,23 @@ Then: Generate → Confirm all instances derivable → Confirm all impossibiliti
 
 **Minimal Transformation Test (Priority Operator)** — Before reinterpretation, expansion, or solution generation, apply the smallest valid transformations available in the domain. Test whether the problem dissolves, whether it resolves directly, or whether the defining structure or function is preserved under the transformed frame. Failure to apply this step risks creating artificial problems from false frames.
 
-**Counterexample Search** — Try to break the rule in another domain. If it breaks, the invariant is wrong or incomplete. This is how IBR self-corrects.
+**Expose Contradictions** — Bring claims, observations, predictions, invariants, and substrate assumptions that appear mutually incompatible into the same frame rather than resolving them independently.
+
+A contradiction indicates that the current model cannot account for all available evidence at once. At least one invariant may be false or incomplete, two invariants may have incompatible scopes, a hidden condition may distinguish the cases, or the substrate on which an invariant depends may have changed. Preserve the contradiction as evidence until a deeper reduction explains why both sides appeared valid.
+
+Do not remove contradiction by averaging competing claims, choosing the more familiar explanation, or treating one side as noise. Reduce the conflict until the cases separate under a real boundary or become consequences of a deeper invariant that explains both.
+
+Contradictions may occur between observations, between invariants, between generation and prediction, between expected and actual consequences, or between the same invariant under different substrate conditions. They are therefore broader than individual counterexamples and can reveal incoherence in the structure surrounding an otherwise locally valid invariant.
+
+A contradiction is resolved only when the resulting model explains why the conflict arose, predicts the conditions under which each side holds, and removes the contradiction without discarding unexplained evidence.
+
+**Counterexample Search** — Try to break the invariant by applying it to new cases, domains, scales, or substrate conditions.
+
+A counterexample is evidence that the invariant is false, incomplete, or scoped too broadly. Do not patch the exception around the rule. Reduce again until the counterexample is either explained by a real boundary or absorbed by a deeper invariant.
+
+Counterexample Search is how IBR prevents a locally successful explanation from hardening into doctrine. An invariant becomes stronger not because it has survived familiar cases, but because deliberate attempts to break it continue to fail.
+
+Counterexample Search tests an invariant against cases. Expose Contradictions tests the coherence of the whole current model.
 
 **Domain Transfer** — Move the idea into another domain that preserves the same transformation rules over the same class of variables, and observe whether the invariant remains stable under those transformations. This operator is the invariant search accelerator.
 
