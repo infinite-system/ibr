@@ -1,6 +1,6 @@
-# Authoring guide — records and lattices
+# Authoring guide — records and generators
 
-Read before WRITING or refining records/lattices (reviews don't need this file; the
+Read before WRITING or refining records or generators (reviews don't need this file; the
 annotation test and charset rules live in SKILL.md).
 
 **Writing style — every field, graspable not clever.** The record is read mid-edit by

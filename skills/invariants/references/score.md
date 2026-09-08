@@ -36,7 +36,7 @@ band above it** — reds cannot be averaged away.
 | Falsifiability | audit (judgment) | % sampled records whose Impossible-if-true could match a bug report AND whose Verification actually verifies the claim (vacuity test) |
 | Freshness | audit + git (mixed) | stale/refines verdict rate; citation resolution; Last-refined age vs subsystem churn |
 | Verification health | execution (deterministic) | % of Verification commands green when run (cheap ones always; all under `--depth verify`) |
-| Composition | checker + audit (mixed) | lattice link validity; dependency-ripple debt (reality refines with unexamined dependents) |
+| Composition | checker + audit (mixed) | generator link validity; dependency-ripple debt (reality refines with unexamined dependents) |
 
 Deterministic factors come from `check_invariants.mjs --score` (JSON). Judgment factors
 come from the audit YOU just ran — never from assertion. Label each factor `[mech]` or

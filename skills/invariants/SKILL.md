@@ -61,7 +61,8 @@ in step 4 is the operational core.
     refutation fails), plus a completeness critic that sweeps the shadow set and the diff for
     invariants the main pass missed
 - **--check** — mechanical validation only: run the bundled checker (see The checker)
-  with `--all` (schema) and `--refs` (annotation drift); report; no semantic analysis.
+  with `--all` (schema) and `--refs` (annotation drift, test-header proofs,
+  source tripwires, and generator membership); report; no semantic analysis.
 - **--audit** — freshness audit of the contract layer itself, no posed change needed. This
   is the mode for "check the invariants" / "is the contract stale?" (see Audit mode).
 - **--survey** — cold-start step for an uncodified repo: enumerate candidate subsystems
@@ -143,10 +144,9 @@ in step 4 is the operational core.
   - When a file doesn't tag kind, infer it and say so — it changes what a violation means.
   - The dependency rule: **chosen invariants stand on reality invariants, never the
     reverse.** A chosen invariant contradicting a reality invariant is itself a finding.
-- If a sibling `<name>.lattice.md` exists, read it for composition context (it sharpens
-  `stressed` verdicts — a change can stress a composition even when each member invariant
-  survives alone). It is derived commentary, not a contract: where it disagrees with the
-  records, the finding is against the lattice.
+- Read the contract's Generator section and any linked standalone generator for composition
+  context. A change can stress a mechanism while each gear survives alone. The records stay
+  the truth; where a generator disagrees, the finding is against the generator.
 - Build the **shadow set**: load-bearing rules stated in code comments, `*.design.md`, or
   readmes of the scoped folders but absent from any contract. Grep for `invariant`, `must
   not`, `never`, `always`, `load-bearing`, `guarantee`. Shadow invariants get analyzed like
@@ -234,21 +234,21 @@ everywhere it touches?
    as `discovered`.)
 5. **Proposed edits** — concrete diff-style proposals across all three layers: contract
    records (refined wordings, new entries from the reverse pass, stale corrections, kind
-   tags), missing/relocated annotations, and lattice updates. **Adapt to each file's local
+   tags), missing/relocated annotations, and generator updates. **Adapt to each file's local
    format**; suggest (never impose) the canonical schema for files that lack structure.
    Apply only on explicit confirmation. Never modify enforcing code itself — findings about
    code are report items, not fixes.
    **Dependency ripple:** when a `refines` narrows or corrects a **reality** record, every
    chosen record standing on it is implicated by definition (the dependency rule) — re-derive
-   each chosen record in the same contract (and lattice compositions if one exists) against
+   each chosen record in the same contract (and generator compositions if one exists) against
    the refined wording in the same review; a reality refinement with unexamined dependents
    is an incomplete proposal.
-   **Rename ripple:** names are coupled across contract, annotations, and lattice links —
+   **Rename ripple:** names are coupled across contract, annotations, and generator links —
    a confirmed rename is applied together with every reference to it, in the same change
    (enumerate references by GREPPING for the old name and its slug across the checkout —
    `--refs` only lists breakage, not live references; after applying, re-run `--refs`: zero
    problems is the done condition, and it now validates contract-links in every md file,
-   not just lattices). Never apply a rename bare.
+   not just Generator sections and standalone files). Never apply a rename bare.
 6. **Final verdict** — `PASS`, or `BLOCKED` naming each fatal finding. BLOCKED means: a
    `violated` verdict stands (the record's boundary is breached in substance — a vacuous or
    narrow `Impossible if true` wording does not rules-lawyer a real breach into PASS; fix
@@ -345,11 +345,11 @@ with a migration note.)
   silently rewrite (straight quote → curly, `--` → em-dash) — visually identical,
   byte-different, producing orphans that look correct on screen. Secondary reason: on this
   charset every platform's heading-anchor algorithm agrees with the canonical slug, so
-  lattice links click through everywhere.
+  generator links click through everywhere.
 - **Unique per file in slug-space** (case- and punctuation-folded) — slugs are reference
   identity. The checker enforces uniqueness as an error; charset violations are
   informational notes by design (legacy tolerance) — new names must comply.
-**Writing style:** before writing or refining any record or lattice, read
+**Writing style:** before writing or refining any record or generator, read
 `references/authoring.md` — the per-field style guide (graspable-not-clever, real
 identifiers, one-if-then, pointers-not-prose). Non-negotiable core, always in force: fields
 are read mid-edit by someone with thirty seconds AND consumed by machinery (grep, citation
@@ -385,9 +385,12 @@ normalized; fenced code blocks, HTML comments, and inline code spans are inert; 
 values may wrap onto continuation lines and are read in full.
 
 **Know its blind spots** (and reconcile them against step 1's manual enumeration):
-- It skips `node_modules/`, `.git/`, `.claude/`, and any nested checkout (a directory with
-  its own `.git` — printed as a `note:`). A contract living under `.claude/` is visible to
-  manual enumeration but invisible to the checker, permanently — flag the divergence.
+- It skips `node_modules/`, `.git/`, `.claude/`, `scripts/retired-smokes/`,
+  and any nested checkout (a directory with its own `.git` — printed as a
+  `note:`). A contract living under `.claude/` is visible to manual
+  enumeration but invisible to the checker, permanently — flag the
+  divergence. Retired smokes are deliberately outside live annotation and
+  contract coverage.
 - Contract diffs deserve fence-vigilance: fencing a record's lines makes it INERT (the
   checker notes fenced record-shaped headings) — review a fence appearing around a record
   as a deletion, because for enforcement it is one. Likewise a new `.git` directory
@@ -397,8 +400,9 @@ values may wrap onto continuation lines and are read in full.
   but not matching the glob — rename or confirm), skipped symlinks, files over 2MB, and
   nested checkouts. Treat every note as a finding to triage, not decoration. Annotation-shaped
   comments that don't parse (typo'd suffix, wrong brackets) are hard failures, as are
-  pathless `invariant: Name` comments in code files; binary files mentioning `invariant:`
-  draw a note. Local-format contracts used as annotation targets draw a loose-harvest note.
+  pathless `invariant: Name` comments in code files; binary files and rendered `.svg` images
+  mentioning `invariant:` draw a note (a screenshot of a code editor is output, not
+  annotation-bearing source). Local-format contracts used as annotation targets draw a loose-harvest note.
 - Non-canonical (local-format) files are `SKIP`ped, not failed — **every SKIP line is a
   migration-candidate finding**, and CI that wants a hard format gate passes `--strict`
   (with `--all`), which turns SKIPs into failures. The test suite sits alongside
@@ -487,20 +491,134 @@ comment at each enforcement point, in whatever comment syntax the language uses:
   is the gate against annotating to silence coverage. Never scatter anchor comments just to satisfy
   coverage — that is the metric degrading the architecture.
 
-## The lattice companion (optional)
+## Generator architecture
 
-`<name>.lattice.md`, sibling to `<name>.invariants.md` — how the invariants hold
-**together**: the layer atomic records cannot carry. Write one only when the composition is
-real (emergent guarantees exist); most contracts don't need it.
+An invariant is a gear: one irreducible conceptual constraint from reality or choice. A
+generator is the mechanism: gears combined with a direction-of-use vector and indexed by
+goal. The same gears pointed at another goal form another generator. A spec is the
+implemented extraction that the generator produces for one use. A bare invariant never
+produces a spec.
 
-Content (keep only what's true):
-- **Dependency map** — which chosen invariants stand on which reality invariants, made
-  concrete (list or mermaid).
-- **Compositions** — clusters that jointly produce an emergent guarantee: the members (by
-  exact name), the guarantee, the one-line mechanism of their conjunction, and what breaks
-  if any member falls.
-- **The generated system** — a short narrative deriving the architecture from the
-  invariants' conjunction ("because <A> and <B>, the pipeline must be <shape>").
+Spec count may grow only while defects stay flat. Flat defects show that the mechanism
+constrains the space. Defect growth shows that the generator leaks.
+
+A generator is itself an invariant: a record whose Components are other invariants and
+whose Scope carries the goal. It gets the full record form — Mechanism, Evidence,
+Verification, and its own `Impossible if true` boundary. A generator with no impossibility
+is a description, not a mechanism.
+
+A `*.invariants.md` is the subsystem contract — gears plus the mechanism in record form;
+a `*.generator.md` is PROSE ONLY — the narrative, evidence arc, and ladder for a graduated
+mechanism (its links are still checked; its content never gates and never claims record
+membership). The generator record's Components are the only generator-coverage membership.
+Never give a contract
+the generator suffix. Never put gear records in a generator file.
+
+The division of readers: an AI scanning the contract alone gets the deep falsifiable
+picture; the prose generator is for human plus AI when full context is needed. Every
+contract Generator section ADVERTISES its prose file with a STUDY ALSO pointer that says
+when to read it. Reference implementation: `engineering.invariants.md` (the generator
+record "Primitives compound capability while defects stay flat") with
+`engineering.generator.md` as its prose.
+
+| Layer | Required shape |
+| --- | --- |
+| Standalone generator | `<home>.generator.md`; prose only; one graduated mechanism with one stable goal or class identity. |
+| Contract generator | Top `## Generator` section: two to four lines of orientation prose, the STUDY ALSO pointer, then the mechanism as a full invariant record (goal in Scope; Components listing each gear with a one-line why, delete-testable; Impossible if true). |
+| Test-file generator header | The FIRST block of `<file>.test.ts`: two registers, formal then described. Proofs are the tests beneath it. |
+| Line annotation | The unchanged tripwire at each enforcement point. |
+
+Graduate a contract mechanism when any one condition holds: it exceeds one screen, spans
+contracts, is embodied by a load-bearing class, or gains a second distinct goal. Keep a
+two-line goal summary and link in the contract after graduation. Use the mechanism's most
+concrete stable home in its filename: goal-named or class-named.
+
+Claims, proofs, and tripwires have three roles and two homes. A claim (the generator:
+goal, domain-invariants, impossibility) lives beside its proof, in the TEST file, because
+that is the only place the two can be checked against each other. A tripwire (the line
+annotation) lives at the enforcement point, in the SOURCE file. The source carries no
+generator block. The colocated test is the structural pointer from source to claims.
+
+The generator header is the test file's constitution and its FIRST content — before
+imports, before the first test:
+
+```ts
+/*
+=== GENERATOR ===
+Goal: ...
+The formal register: pointers to contract records, never restatements.
+[A contract record](path.invariants.md#a-contract-record)
+// domain-invariant: <symbol> — <one-line if-then>
+Impossible if true: <the local mechanism's negative space>
+
+=== GENERATOR-DESCRIBED ===
+The prose register: why this shape, the direction of use, what a fresh
+session must not simplify away. Never gates; never restates the formal part.
+*/
+
+// domain-invariant: <symbol> — <the if-then this test proves>
+test('<the property, stated as a sentence>', ...)
+
+// impossible-if-true: <symbol> — <the exact Impossible if true text>
+test('<the negative property, stated as a sentence>', ...)
+
+// invariant: <record name> (<contract path>)
+test('<the property, stated as a sentence>', ...)
+```
+
+The Goal line is the generator's purpose: what the mechanism produces and the tension it
+resolves, in the module's own domain words (rows, panes, tokens, matches — never "behavior",
+"consistency", or "this file"). The test: read the Goal alone — a reader must know which
+mechanism this is without the file name; a Goal that fits another file with the name swapped
+is not a Goal. The described register says only what the formal lines cannot (why this
+shape and not the obvious alternative, the direction of use, the caveat a fresh session
+would simplify away, `Open question:` lines for what the tests do not reach); a sentence
+that fits every file belongs in no file.
+
+An optional `Subject:` line in the formal register names the source file(s) the header's
+symbols resolve against (one or more paths; a cross-source or contract-only proof may name
+none). When absent, the same-named sibling source is the subject. The checker verifies the
+line when present and applies the sibling default when not.
+
+The Goal and the formal register cohere in both directions — for the file's OWN claims. A
+contract-record link is a hosted-proof binding to an external generator: it must have an
+annotated test in the file (the bijection), and it is exempt from the Goal-deletion test —
+the goal it serves is the record's, not this file's. The rule below binds domain-invariant
+and impossibility lines: the Goal is the index that turns
+these gears into this mechanism, so every formal line is load-bearing for the Goal (delete
+it and the Goal is no longer reachable — if the Goal survives, the line belongs to another
+mechanism or the Goal is too narrow), and the Goal is reachable from the formal lines alone
+(if it needs a claim the header does not carry, a component is missing or the Goal
+overreaches). The described register carries the direction of use — how these gears combine
+toward this goal — which is why it cannot be templated. Impossible if the header coheres: a
+formal line whose deletion leaves the Goal intact; a Goal that needs a claim the header lacks.
+
+Every test that proves a claim carries the claim's annotation directly above it. The
+test name states the property. There is no spec register: a proof binding written as a
+row would only repeat the test name beside it. Proof coverage is the checker's question:
+a header claim with no annotated test, or an annotated test whose claim is not in the
+header, is a finding.
+
+The two registers mirror the doc layers: formal (falsifiable) is the contract's record,
+described (prose) is the generator file. One structure at two scopes.
+
+Rules the checker holds:
+
+- A header domain-invariant names a symbol declared in the SIBLING source
+  (`X.test.ts` claims about `X.ts`).
+- Every header domain-invariant, contract-record pointer, and `Impossible if true` line has
+  at least one annotated test in the same file. An impossibility proof uses
+  `// impossible-if-true: <symbol> — <exact text>`, with a symbol declared by the header.
+  Domain-invariant and impossibility annotations never prove each other's claims.
+- A `// domain-invariant:` tripwire in source resolves to a header line in its sibling test.
+- `=== GENERATOR ===` in a non-test `.ts` file is a migration finding.
+
+Keep upstream records as references. Header prose owns only what no upstream record owns.
+Keep line annotations at their enforcement points. Use single-star glob forms inside the
+block because a star-slash closes it.
+
+A domain-invariant stays local only while nothing across the seam depends on it. Promote it
+to a full contract record as soon as a second file or subsystem depends on it.
 
 **References — standard markdown links; the anchor is the identity.**
 
@@ -514,6 +632,8 @@ Content (keep only what's true):
 - Every contract-targeting link **must carry an anchor**: `#slug(record name)`. Slug rule:
   lowercase · strip everything but letters/digits/spaces/hyphens · spaces become `-`
   (identical to GitHub's rendered heading anchors, so links click through).
+- Outside `Components`, an italic record name is prose, not a dependency. `--refs` rejects it.
+  Use a Markdown link with the record anchor. A same-contract link may use `#record-anchor`.
 - Link text is free (aliases welcome) with one guard: text that is verbatim a DIFFERENT
   record's name than the anchor's is an error — objectively misleading. Style: first
   mention in a doc uses the full record name; aliases must still gesture at the content.
@@ -524,15 +644,17 @@ Content (keep only what's true):
   resolve the anchor and confirm it names the record the sentence means. A free alias
   over a wrong-but-valid anchor is invisible to the checker; only this habit and the
   audit catch it.
-- The checker (`--refs`) validates every lattice link mechanically: anchor resolves,
-  no verbatim-name/anchor mismatch, no undefined reference keys — and reports records
-  of the sibling contract never referenced ("never referenced" coverage, informational).
+- The checker (`--refs`) validates every generator link mechanically: anchors resolve,
+  link text does not name another record, and reference keys exist. It reports records that
+  no generator record lists in its Components field. Links in prose companions still resolve
+  and count as links, but they do not claim membership.
 
-Rules — this doc is drift-prone by nature, so:
-1. **Derived, never legislative.** The records are the truth; the lattice re-derives them.
-   If writing it surfaces a rule not yet recorded, that is a `discovered` — it enters
-   `invariants.md` FIRST, then the lattice may reference it.
-2. Same instrument-not-archive rule: live composition only; history lives in git.
+Keep only live composition. History lives in git. A new gear enters the contract before the
+generator can use it.
+
+`<name>.lattice.md` remains accepted as the reflective legacy form. It is correct when the
+structure is discovered rather than engineered, as in the ethics investigation that gave
+the form its name. Engineering repositories use `<name>.generator.md`.
 
 ## Audit mode
 
@@ -580,7 +702,7 @@ claims, the code is reality — verify the claims wholesale.
    (mining Mechanism/Evidence/Verification from the prose and the code it describes),
    preserving the original's voice in the Invariant statements. Propose-only, like
    everything else.
-5. **Lattice check** — the checker already validated anchors mechanically (audit step 1); the
+5. **Generator check** — the checker already validated anchors mechanically (audit step 1); the
    judgment share: for each link, confirm the surrounding prose describes the record its
    anchor actually names — a free alias meaning a different record is a `stale`-class
    finding the machine cannot see. Then: every composition claim still follows from the
@@ -612,11 +734,11 @@ The request to bootstrap authorizes the work, not the write — and confirm in C
 present records in small batches (~5, grouped by topic), each batch confirmed separately;
 a wall-of-text confirmation at the moment the human knows least is how vacuous records
 become baseline. Everything enters as `provisional`; the first audit re-runs the vacuity
-test on bootstrapped records. Close each bootstrap by offering the subsystem's
-`<name>.lattice.md` where compositions are real, and — once two or more subsystem
-contracts exist — a root `project.lattice.md` for the cross-subsystem dependency map
-(the survey's import-graph output is its first draft). Prize impossibility statements — they are what give the contract
-teeth.
+test on bootstrapped records. Add the bounded Generator section when the contract reaches
+two records. Graduate it only when a split trigger applies. Once two or more subsystem
+contracts exist, a cross-contract project mechanism normally graduates to
+`project.generator.md`; the survey's import graph is its first draft. Prize impossibility
+statements — they give the contract teeth.
 
 ## Known limits — what this system cannot enforce
 
@@ -647,7 +769,7 @@ Mitigations are named; none of these limits is secretly solved elsewhere.
 5. **Audit recency is not persisted.** No artifact records when the last semantic audit
    ran; `Last refined` tracks edits, not verification. Rely on CI cadence for the
    mechanical layer and calendar discipline for the semantic one.
-6. **Single-repo by construction.** Annotations and lattice links resolve only against
+6. **Single-repo by construction.** Annotations and generator links resolve only against
    contracts inside the current checkout — code in one repo cannot reference a platform
    contract living in another. The workaround (vendoring a copy) creates an unsynced
    duplicate; if you vendor, treat the copy as read-only and re-vendor on upstream change.
@@ -658,7 +780,7 @@ Mitigations are named; none of these limits is secretly solved elsewhere.
    during another session's rename ripple sees transient orphans (red, not green — it
    fails safe, but it cries wolf). No lock exists; coordinate sessions or expect
    intermittent noise.
-8. **Scope derivation degrades with lattice size.** Content-implication over shared
+8. **Scope derivation degrades with generator size.** Content-implication over shared
    vocabulary implicates broadly as contracts multiply; prefer the diff's rarest, most
    specific identifiers when grepping, and audit stalest-first (via each contract's git
    history) rather than everything-always.
