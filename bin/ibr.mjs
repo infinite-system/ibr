@@ -38,9 +38,11 @@ function usage() {
         --cursor            .cursor/rules/ibr.mdc
         --copilot           .github/instructions/ibr.instructions.md
         --agents / --codex  a managed section in AGENTS.md (Codex CLI,
-                            Windsurf, Gemini CLI and others read this file)
+                            Windsurf and others read this file)
+        --gemini            a managed section in GEMINI.md (Gemini CLI)
         --all               Claude + every vendor whose footprint exists
-                            (.cursor/, .github/, AGENTS.md) — creates nothing new
+                            (.cursor/, .github/, AGENTS.md, GEMINI.md) —
+                            creates nothing new
         --force             overwrite locally modified copies
 
   ibr check [args...]
@@ -108,10 +110,11 @@ function install(installArguments) {
     flags.includes('--agents') ||
     flags.includes('--codex') || // Codex CLI reads AGENTS.md — same target
     (wantAll && detected('AGENTS.md'));
+  const wantGemini = flags.includes('--gemini') || (wantAll && detected('GEMINI.md'));
   const wantClaude =
     wantAll ||
     flags.includes('--claude') ||
-    (!wantCursor && !wantCopilot && !wantAgents);
+    (!wantCursor && !wantCopilot && !wantAgents && !wantGemini);
 
   if (wantClaude) {
     const destination = join(targetRoot, '.claude', 'skills');
@@ -143,6 +146,7 @@ function install(installArguments) {
   if (wantAll && !wantCursor) skippedNotice('Cursor rule', '.cursor/', '--cursor');
   if (wantAll && !wantCopilot) skippedNotice('Copilot instructions', '.github/', '--copilot');
   if (wantAll && !wantAgents) skippedNotice('AGENTS.md section', 'AGENTS.md', '--agents');
+  if (wantAll && !wantGemini) skippedNotice('GEMINI.md section', 'GEMINI.md', '--gemini');
 
   if (wantCursor) {
     installFile(
@@ -160,14 +164,15 @@ function install(installArguments) {
     );
   }
 
-  if (wantAgents) {
-    // AGENTS.md is shared and user-owned — manage only a marked section.
+  // Shared context files (AGENTS.md, GEMINI.md) are user-owned — manage only
+  // a marked section; everything outside the markers stays theirs.
+  function installManagedSection(fileName, flagName) {
     const startMarker = '<!-- ibr:framework:start -->';
     const endMarker = '<!-- ibr:framework:end -->';
-    const section = `${startMarker}\n<!-- managed by \`npx @ibr-foundation/ibr install --agents\` — edits inside are overwritten -->\n\n${frameworkText}\n${endMarker}`;
-    const agentsPath = join(targetRoot, 'AGENTS.md');
-    if (existsSync(agentsPath)) {
-      const existing = readFileSync(agentsPath, 'utf8');
+    const section = `${startMarker}\n<!-- managed by \`npx @ibr-foundation/ibr install ${flagName}\` — edits inside are overwritten -->\n\n${frameworkText}\n${endMarker}`;
+    const filePath = join(targetRoot, fileName);
+    if (existsSync(filePath)) {
+      const existing = readFileSync(filePath, 'utf8');
       const startIndex = existing.indexOf(startMarker);
       const endIndex = existing.indexOf(endMarker);
       if (startIndex !== -1 && endIndex !== -1) {
@@ -176,20 +181,23 @@ function install(installArguments) {
           section +
           existing.slice(endIndex + endMarker.length);
         if (updated === existing) {
-          console.log(`ibr: AGENTS.md section already up to date (ibr v${packageVersion}).`);
+          console.log(`ibr: ${fileName} section already up to date (ibr v${packageVersion}).`);
         } else {
-          writeFileSync(agentsPath, updated);
-          console.log(`ibr: AGENTS.md section updated (ibr v${packageVersion}).`);
+          writeFileSync(filePath, updated);
+          console.log(`ibr: ${fileName} section updated (ibr v${packageVersion}).`);
         }
       } else {
-        writeFileSync(agentsPath, existing.trimEnd() + '\n\n' + section + '\n');
-        console.log(`ibr: AGENTS.md section appended (ibr v${packageVersion}).`);
+        writeFileSync(filePath, existing.trimEnd() + '\n\n' + section + '\n');
+        console.log(`ibr: ${fileName} section appended (ibr v${packageVersion}).`);
       }
     } else {
-      writeFileSync(agentsPath, section + '\n');
-      console.log(`ibr: AGENTS.md created (ibr v${packageVersion}).`);
+      writeFileSync(filePath, section + '\n');
+      console.log(`ibr: ${fileName} created (ibr v${packageVersion}).`);
     }
   }
+
+  if (wantAgents) installManagedSection('AGENTS.md', '--agents');
+  if (wantGemini) installManagedSection('GEMINI.md', '--gemini');
 }
 
 function check(checkArguments) {

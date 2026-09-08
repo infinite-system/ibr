@@ -6,7 +6,12 @@ then generating from it to confirm. This package ships the framework and two Cla
 that put it to work.
 
 - **`IBR.md`** — the full framework: axioms, operators, the reduction/generation proof
-  loop, the Scope axiom, and the operational manual.
+  loop, the Scope axiom, and the operational manual. Load it straight into an agent's
+  system prompt — the most direct way to run IBR:
+
+  ```bash
+  claude --append-system-prompt-file node_modules/@ibr-foundation/ibr/IBR.md
+  ```
 - **`/ibr` skill** — loads IBR as a session's reasoning engine and applies it operationally.
 - **`/invariants` skill** — persists and enforces a codebase's load-bearing invariants as
   contract files (`*.invariants.md`), with a zero-dependency checker, scope derivation,
@@ -27,7 +32,8 @@ Other agents receive the framework manual (`IBR.md`) in their native instruction
 npx @ibr-foundation/ibr install --cursor     # .cursor/rules/ibr.mdc
 npx @ibr-foundation/ibr install --copilot    # .github/instructions/ibr.instructions.md
 npx @ibr-foundation/ibr install --agents     # managed section in AGENTS.md
-                                             # (Codex CLI, Windsurf, Gemini CLI, ...)
+                                             # (Codex CLI, Windsurf, ...)
+npx @ibr-foundation/ibr install --gemini     # managed section in GEMINI.md (Gemini CLI)
 npx @ibr-foundation/ibr install --all        # Claude + every vendor whose footprint
                                              # exists here — creates nothing new
 ```
@@ -93,8 +99,7 @@ it is not the invariant yet — keep reducing.
 The full framework — the axioms, the operator set (elimination, validation, reframing,
 sequencing), the two-axis reasoning audit, and the operational manual for AI — is in
 [`IBR.md`](./IBR.md). It ships in this package, so the copy you install always matches
-the version you run. It is also the file to load into an agent's system prompt:
-`--append-system-prompt-file node_modules/@ibr-foundation/ibr/IBR.md`.
+the version you run.
 
 ## Provenance
 
