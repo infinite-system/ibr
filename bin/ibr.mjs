@@ -1,69 +1,217 @@
 #!/usr/bin/env node
 // CLI for the IBR package.
 //
-//   npx @ibr-foundation/ibr install [target]   copy the /ibr + /invariants skills
-//                                             into <target>/.claude/skills (default: cwd)
-//   npx @ibr-foundation/ibr check [args...]     run the invariants contract checker
-//   npx @ibr-foundation/ibr help                usage
+//   npx @ibr-foundation/ibr install [target] [vendor flags]   install the framework
+//   npx @ibr-foundation/ibr check [args...]                   run the invariants checker
+//   npx @ibr-foundation/ibr help                              usage
 //
 // Zero dependencies. The skills and framework doc ship alongside this file.
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
-import { cpSync, existsSync, mkdirSync } from 'node:fs';
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-const PKG = resolve(HERE, '..');
-const SKILLS = join(PKG, 'skills');
+const binDirectory = dirname(fileURLToPath(import.meta.url));
+const packageRoot = resolve(binDirectory, '..');
+const skillsRoot = join(packageRoot, 'skills');
+const packageVersion = JSON.parse(
+  readFileSync(join(packageRoot, 'package.json'), 'utf8'),
+).version;
 
-const [cmd, ...rest] = process.argv.slice(2);
+const [command, ...commandArguments] = process.argv.slice(2);
 
 function usage() {
   console.log(`ibr — Invariant-Based Reasoning
 
-  ibr install [target]   Install the /ibr and /invariants skills into
-                         <target>/.claude/skills (default: current directory).
-  ibr check [args...]    Run the invariants contract checker. Args pass through,
-                         e.g. 'ibr check --all' or 'ibr check --refs'.
-  ibr help               Show this message.
+  ibr install [target] [flags]
+      Install IBR for coding agents into <target> (default: current directory).
+      Claude is the native format — the full /ibr and /invariants skills,
+      scripts and checker included. Other vendors receive the framework
+      manual (IBR.md) in their native instruction format:
+        (none) / --claude   .claude/skills/{ibr,invariants}/
+        --cursor            .cursor/rules/ibr.mdc
+        --copilot           .github/instructions/ibr.instructions.md
+        --agents / --codex  a managed section in AGENTS.md (Codex CLI,
+                            Windsurf, Gemini CLI and others read this file)
+        --all               Claude + every vendor whose footprint exists
+                            (.cursor/, .github/, AGENTS.md) — creates nothing new
+        --force             overwrite locally modified copies
+
+  ibr check [args...]
+      Run the invariants contract checker. Args pass through,
+      e.g. 'ibr check --all' or 'ibr check --refs'.
+
+  ibr help              Show this message.
 
 Docs: IBR.md ships in this package and at https://github.com/infinite-system/ibr`);
 }
 
-function install(target) {
-  const dest = join(resolve(target || process.cwd()), '.claude', 'skills');
-  mkdirSync(dest, { recursive: true });
-  for (const skill of ['ibr', 'invariants']) {
-    const from = join(SKILLS, skill);
-    if (!existsSync(from)) {
-      console.error(`error: bundled skill '${skill}' missing from package at ${from}`);
-      process.exit(1);
+function fail(message) {
+  console.error(`ibr: ${message}`);
+  process.exit(1);
+}
+
+function install(installArguments) {
+  const flags = installArguments.filter((argument) => argument.startsWith('--'));
+  const positional = installArguments.filter(
+    (argument) => !argument.startsWith('--'),
+  );
+  const targetRoot = resolve(positional[0] || process.cwd());
+  const force = flags.includes('--force');
+
+  const frameworkPath = join(packageRoot, 'IBR.md');
+  if (!existsSync(frameworkPath)) {
+    fail(`IBR.md missing from package at ${frameworkPath}`);
+  }
+  const frameworkText = readFileSync(frameworkPath, 'utf8');
+
+  // Write one single-file target idempotently; refuse to clobber local edits
+  // without --force (ivue's installer discipline, ported).
+  function installFile(relativePath, content, label) {
+    const targetPath = join(targetRoot, relativePath);
+    if (existsSync(targetPath)) {
+      const existing = readFileSync(targetPath, 'utf8');
+      if (existing === content) {
+        console.log(`ibr: ${label} already up to date (ibr v${packageVersion}).`);
+        return;
+      }
+      if (!force) {
+        fail(
+          `${relativePath} exists and differs from ibr v${packageVersion}'s copy.\n` +
+            '     Re-run with --force to overwrite it.',
+        );
+      }
     }
-    cpSync(from, join(dest, skill), { recursive: true });
-    console.log(`installed ${skill} -> ${join(dest, skill)}`);
+    mkdirSync(dirname(targetPath), { recursive: true });
+    writeFileSync(targetPath, content);
+    console.log(`ibr: ${label} installed at ${relativePath} (ibr v${packageVersion}).`);
   }
-  console.log('\nDone. The /ibr and /invariants skills are now available in this project.');
+
+  // Explicit flags always install (creating the folder is the point).
+  // --all is detect-and-equip: vendor targets only where their footprint
+  // already exists — it never scaffolds a tool you don't use. Claude is the
+  // native format and installs in every mode.
+  const wantAll = flags.includes('--all');
+  const detected = (marker) => existsSync(join(targetRoot, marker));
+  const skippedNotice = (label, marker, flag) =>
+    console.log(`ibr: ${label} skipped — no ${marker} here (pass ${flag} to create it).`);
+
+  const wantCursor = flags.includes('--cursor') || (wantAll && detected('.cursor'));
+  const wantCopilot = flags.includes('--copilot') || (wantAll && detected('.github'));
+  const wantAgents =
+    flags.includes('--agents') ||
+    flags.includes('--codex') || // Codex CLI reads AGENTS.md — same target
+    (wantAll && detected('AGENTS.md'));
+  const wantClaude =
+    wantAll ||
+    flags.includes('--claude') ||
+    (!wantCursor && !wantCopilot && !wantAgents);
+
+  if (wantClaude) {
+    const destination = join(targetRoot, '.claude', 'skills');
+    mkdirSync(destination, { recursive: true });
+    for (const skillName of ['ibr', 'invariants']) {
+      const sourceDirectory = join(skillsRoot, skillName);
+      if (!existsSync(sourceDirectory)) {
+        fail(`bundled skill '${skillName}' missing from package at ${sourceDirectory}`);
+      }
+      // Clobber guard on the skill's manifest: a locally modified SKILL.md
+      // means the user customized the skill — keep theirs without --force.
+      const installedManifest = join(destination, skillName, 'SKILL.md');
+      if (existsSync(installedManifest) && !force) {
+        const existing = readFileSync(installedManifest, 'utf8');
+        const shipped = readFileSync(join(sourceDirectory, 'SKILL.md'), 'utf8');
+        if (existing !== shipped) {
+          console.log(
+            `ibr: skill '${skillName}' at ${installedManifest} was customized — keeping yours.\n` +
+              '     Re-run with --force to overwrite your customizations.',
+          );
+          continue;
+        }
+      }
+      cpSync(sourceDirectory, join(destination, skillName), { recursive: true });
+      console.log(`ibr: skill '${skillName}' installed -> ${join(destination, skillName)}`);
+    }
+  }
+
+  if (wantAll && !wantCursor) skippedNotice('Cursor rule', '.cursor/', '--cursor');
+  if (wantAll && !wantCopilot) skippedNotice('Copilot instructions', '.github/', '--copilot');
+  if (wantAll && !wantAgents) skippedNotice('AGENTS.md section', 'AGENTS.md', '--agents');
+
+  if (wantCursor) {
+    installFile(
+      join('.cursor', 'rules', 'ibr.mdc'),
+      `---\ndescription: Invariant-Based Reasoning (IBR) — reduce problems to their invariant structure; the full framework and operating manual.\nglobs:\nalwaysApply: false\n---\n\n${frameworkText}`,
+      'Cursor rule',
+    );
+  }
+
+  if (wantCopilot) {
+    installFile(
+      join('.github', 'instructions', 'ibr.instructions.md'),
+      `---\napplyTo: '**'\n---\n\n${frameworkText}`,
+      'Copilot instructions',
+    );
+  }
+
+  if (wantAgents) {
+    // AGENTS.md is shared and user-owned — manage only a marked section.
+    const startMarker = '<!-- ibr:framework:start -->';
+    const endMarker = '<!-- ibr:framework:end -->';
+    const section = `${startMarker}\n<!-- managed by \`npx @ibr-foundation/ibr install --agents\` — edits inside are overwritten -->\n\n${frameworkText}\n${endMarker}`;
+    const agentsPath = join(targetRoot, 'AGENTS.md');
+    if (existsSync(agentsPath)) {
+      const existing = readFileSync(agentsPath, 'utf8');
+      const startIndex = existing.indexOf(startMarker);
+      const endIndex = existing.indexOf(endMarker);
+      if (startIndex !== -1 && endIndex !== -1) {
+        const updated =
+          existing.slice(0, startIndex) +
+          section +
+          existing.slice(endIndex + endMarker.length);
+        if (updated === existing) {
+          console.log(`ibr: AGENTS.md section already up to date (ibr v${packageVersion}).`);
+        } else {
+          writeFileSync(agentsPath, updated);
+          console.log(`ibr: AGENTS.md section updated (ibr v${packageVersion}).`);
+        }
+      } else {
+        writeFileSync(agentsPath, existing.trimEnd() + '\n\n' + section + '\n');
+        console.log(`ibr: AGENTS.md section appended (ibr v${packageVersion}).`);
+      }
+    } else {
+      writeFileSync(agentsPath, section + '\n');
+      console.log(`ibr: AGENTS.md created (ibr v${packageVersion}).`);
+    }
+  }
 }
 
-function check(args) {
-  const script = join(SKILLS, 'invariants', 'scripts', 'check_invariants.mjs');
-  if (!existsSync(script)) {
-    console.error(`error: checker missing from package at ${script}`);
-    process.exit(1);
+function check(checkArguments) {
+  const checkerScript = join(skillsRoot, 'invariants', 'scripts', 'check_invariants.mjs');
+  if (!existsSync(checkerScript)) {
+    fail(`checker missing from package at ${checkerScript}`);
   }
-  const r = spawnSync(process.execPath, [script, ...args], { stdio: 'inherit' });
-  process.exit(r.status ?? 1);
+  const result = spawnSync(process.execPath, [checkerScript, ...checkArguments], {
+    stdio: 'inherit',
+  });
+  process.exit(result.status ?? 1);
 }
 
-switch (cmd) {
-  case 'install': install(rest[0]); break;
-  case 'check': check(rest); break;
+switch (command) {
+  case 'install': install(commandArguments); break;
+  case 'check': check(commandArguments); break;
   case undefined:
   case 'help':
   case '--help':
   case '-h': usage(); break;
   default:
-    console.error(`unknown command: ${cmd}\n`);
+    console.error(`unknown command: ${command}\n`);
     usage();
     process.exit(2);
 }
