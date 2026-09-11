@@ -32,6 +32,16 @@ Any system contains more variation than invariant core. The invariant is always 
 
 Removing non-essential parts reveals essential structure. The correct direction of thought is reduction, not accumulation. This is why IBR feels like "carving away."
 
+### Axiom — Expansion Feeds Reduction ^expansion-feeds-reduction
+
+Reduction is the direction of conclusion; expansion is the direction of search. An invariant can only be trusted against the variation actually held, so widening the field — new cases, transferred domains, generated instances, attempted breaks — is not a detour from reduction but its supply line. Elimination needs something to eliminate against; reduction over a narrow field compresses to a false floor.
+
+The load-bearing distinction: expansion of the **field** is exploration and feeds reduction; expansion of the **generator** — more rules, branches, exceptions — is a symptom of incomplete reduction (with one exemption, stated under Simplicity: expansion that restores a missing load-bearing distinction is part of the reduction direction).
+
+Impossibility boundary: if this axiom holds, then no invariant derived without field expansion may be treated as final; no amount of compression skill substitutes for a wide field; and "it survived everything I tried" carries no weight when little was tried. A reduction performed over an unexpanded field is a proto-invariant regardless of how clean it looks.
+
+This axiom corrects a one-directional reading of the two axioms above: the reduction gradient, read alone, trains a wielder to treat all expansion as waste — producing premature compression and reluctance to explore. The operators that expand (Domain Transfer, Counterexample Search, the Generation Test, the Observer Principle's contact with variation) are not exceptions to the method; they are its second stroke.
+
 ### Axiom — Simplicity is the Signature of Deep Reduction ^simplicity-signature
 
 Reduction yields structure more compact than what it generates. Persistent complexity signals deeper reduction may be available; compression is the direction. Whether reality is simple at its base remains an empirical question, not a structural commitment.
