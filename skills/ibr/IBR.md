@@ -24,9 +24,11 @@ There exist objective patterns that remain stable across transformations within 
 
 What kind of real the structure is varies by domain — made precise in the Scope Axiom below.
 
-### Axiom — Noise is Higher than the Invariant ^noise-higher
+### Axiom — Variation Obscures the Invariant ^variation-obscures
 
-Any system contains more variation than invariant core. The invariant is always structurally smaller than the problem space. The goal of IBR is not to search the space, but to compress it to the invariant core.
+Any system presents more variation than invariant core. The invariant is always structurally smaller than the problem space it generates — which is why compression is possible, and why the invariant hides.
+
+But variation is not garbage. It divides into expression — the generator showing itself in many forms — and noise, which carries no signal. To passive inspection variation obscures the invariant; to an observer who tracks what survives it, variation is the medium of discovery: invariance is only visible ACROSS variation. The goal of IBR is therefore not to search the space, but to compress it to the invariant core — treating variation as evidence and discarding only what carries no signal.
 
 ### Axiom — Invariants are Discoverable by Reduction ^discoverable-reduction
 
