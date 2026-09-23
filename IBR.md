@@ -42,7 +42,7 @@ The load-bearing distinction: expansion of the **field** is exploration and feed
 
 Impossibility boundary: if this axiom holds, then no invariant derived without field expansion may be treated as final; no amount of compression skill substitutes for a wide field; and "it survived everything I tried" carries no weight when little was tried. A reduction performed over an unexpanded field is a proto-invariant regardless of how clean it looks.
 
-This axiom corrects a one-directional reading of the two axioms above: the reduction gradient, read alone, trains a wielder to treat all expansion as waste — producing premature compression and reluctance to explore. The operators that expand (Domain Transfer, Counterexample Search, the Generation Test, the Observer Principle's contact with variation) are not exceptions to the method; they are its second stroke.
+Reduction and expansion form a two-stroke process: reduction compresses toward the invariant, while expansion supplies the variation against which that compression becomes trustworthy. Read alone, the reduction gradient trains a wielder to treat all expansion as waste — producing premature compression and reluctance to explore. Domain Transfer, Counterexample Search, the Generation Test, and the Observer Principle's contact with variation are therefore not departures from reduction; they are its second stroke — what gives reduction enough reality to reduce against.
 
 ### Axiom — Simplicity is the Signature of Deep Reduction ^simplicity-signature
 
@@ -244,6 +244,172 @@ Understanding cannot be established once and then assumed. It remains conditiona
 
 Reasoning advances through the closed relation between observation, reduction, generation, prediction, and renewed observation.
 
+### Axiom — Reality-Constrained Construction ^reality-constrained-construction
+
+IBR operates in two directions: **discovery of invariants** and **construction of invariants**. Discovery determines what structure is already imposed by reality, existing relations, inherited systems, or active rules. Construction deliberately constrains selected degrees of freedom to create new structure.
+
+Construction cannot replace discovery. Before choosing what should remain invariant, the wielder must determine what is already invariant, which relations are load-bearing, what consequences already follow from the substrate, and which freedoms actually exist. An engineered invariant built without this reduction is built on an unknown foundation and may conflict with structures that cannot be negotiated away.
+
+**Canonical form:** Discover what reality already constrains. Determine what remains free. Deliberately constrain the freedoms whose stabilization generates the desired structure. Then derive and test the consequences.
+
+#### Reality Includes Inherited Structure
+
+For IBR, reality is not limited to nature. A structure created by another agent may become part of the effective reality faced by the next agent. An API, legal system, protocol, machine, institution, language, architecture, market structure, or previously engineered constraint may have been chosen historically, yet once encountered as an active substrate it imposes real relations and consequences.
+
+IBR therefore distinguishes the **origin of a structure** from its **current structural status**. A constraint may have been chosen at one level and nevertheless function as an externally given invariant at another. What was engineered yesterday may be part of reality for today's problem.
+
+#### Relations Are Load-Bearing
+
+Invariants do not exist only as isolated properties. A relation between components may itself be invariant and may carry more structural information than either component alone.
+
+Engineering therefore requires discovering not only what components exist and what properties remain stable, but also:
+
+- what depends on what;
+- what constrains what;
+- what transformations preserve the relation;
+- which relations break when a component changes;
+- which consequences arise only from the relation itself.
+
+A system may retain all of its components and still fail if the invariant relation between them is destroyed.
+
+**Canonical form:** Preserve not only the things that must remain, but the relations that make them structurally meaningful.
+
+#### Chosen Invariants
+
+Not every invariant used by IBR must be discovered as an independently existing property of the domain. An invariant may be **chosen deliberately** as an engineering constraint: a degree of freedom intentionally stabilized so that the resulting system acquires a more useful geometry of possibilities.
+
+The choice itself is not a discovery of natural necessity. But once the invariant is established, its consequences are no longer arbitrary. The engineer may choose the constraint; the engineer does not choose what logically, physically, computationally, or relationally follows from it. This gives chosen invariants objective consequences even when their origin is intentional.
+
+**Chosen invariant → constrained possibility space → necessary consequences within that scope.**
+
+A chosen invariant is valid as an engineering move only if:
+
+- it is compatible with the discovered substrate;
+- it preserves required function;
+- it removes unnecessary degrees of freedom;
+- it produces a useful impossibility boundary;
+- its downstream consequences survive generation and breaking tests;
+- it does not suppress a variable that must remain free.
+
+#### Engineering as Invariant Construction
+
+IBR is therefore not only a method for discovering the generators already present in a domain. It is also a method for constructing new generators. Engineering through IBR proceeds by:
+
+1. **Discovering the substrate** — identify the invariants and load-bearing relations already constraining the domain.
+2. **Mapping the remaining degrees of freedom** — determine what can actually be changed.
+3. **Selecting invariants** — deliberately stabilize the freedoms whose constraint produces the desired structural effect.
+4. **Generating consequences** — derive what the chosen invariants permit, require, and make impossible.
+5. **Composing generators** — combine compatible discovered and constructed invariants into higher-order structure.
+6. **Breaking the construction** — search for failure modes, hidden dependencies, incompatible relations, and unintended consequences.
+7. **Returning to reality** — test whether the constructed system behaves as predicted.
+8. **Reducing again** — remove unnecessary constraints, restore freedoms constrained without need, and replace weak invariants with deeper ones.
+
+The result is a closed relation:
+
+**reality → discovery → invariant construction → generated structure → consequences → observation → reduction → refined construction**
+
+#### Constructed Invariants Become Substrate
+
+Once a constructed invariant is embedded into a functioning system, it can become a load-bearing part of the environment for higher-level systems. This creates recursive structural construction:
+
+**discovered invariant → engineered invariant → constructed system → substrate for the next level → higher-order invariant → further construction**
+
+An invariant may therefore change roles across levels. What is chosen at one level may be given at the next; what is a generator at one level may become a component at another; what is an engineering decision for one agent may become part of reality for another.
+
+#### Reduction–Construction Symmetry
+
+**Understanding contracts toward generators. Engineering expands from generators.**
+
+Reduction moves from variation toward the smallest structure that preserves it. Construction moves from that structure outward, using invariants to shape the possibility space and generate new structure.
+
+#### Meta-Engineering Principle
+
+IBR can therefore be used as a domain-independent method of meta-engineering. Its task is not to prescribe what software, bridges, robots, organizations, institutions, or other systems should look like. Its task is more fundamental:
+
+> **Discover the structure that cannot be freely chosen, identify the structure that can be chosen, and construct the right invariants so that the resulting possibility space generates the intended system while excluding unacceptable states.**
+
+Different domains instantiate this differently because their substrates differ. The structural operation remains the same.
+
+**Compression:** IBR discovers the invariants reality already imposes and engineers the invariants that should be imposed next.
+
+**Find what is invariant. Determine what may vary. Choose what should remain invariant. Generate what follows.**
+
+### Axiom — Constraint Leverage ^constraint-leverage
+
+Within a structured possibility space, constraints differ in downstream leverage according to the dependency relations they govern. A constraint is **high-leverage** when many downstream states, relations, behaviors, or generators depend upon it, so changing, resolving, removing, or establishing it produces effects disproportionate to the apparent size of the intervention.
+
+Constraint leverage is not a property of the constraint in isolation. It arises from the dependency geometry surrounding it. The same constraint may have enormous leverage in one system and little in another depending on what structurally depends upon it. This leverage operates in two directions: discovery and construction.
+
+#### Discovery Direction — The Bottleneck Principle
+
+In discovery, a high-leverage unresolved constraint appears as a bottleneck. A bottleneck blocks, constrains, or distorts a disproportionately large region of the problem space because many apparently separate problems depend upon the same upstream condition.
+
+Resolving the bottleneck therefore produces a cascade of downstream simplification. Problems that appeared independent may dissolve together once their shared generating constraint is exposed.
+
+**Bottleneck Principle:** When multiple unresolved constraints exist, identify and resolve first the constraint whose resolution produces the greatest cascade of downstream simplification.
+
+The strongest discovery move is not necessarily to solve the largest visible problem, but to expose the smallest upstream constraint generating the largest downstream difficulty.
+
+#### Construction Direction — The Leverage Principle
+
+In construction, a high-leverage constraint becomes a design primitive. Once the substrate and remaining degrees of freedom are understood, a chosen invariant can be placed at a structurally influential point so that its consequences propagate through the dependent possibility space.
+
+A correctly placed invariant generates desired downstream structure while making incompatible states impossible. Instead of controlling many downstream behaviors independently, the designer constrains the upstream geometry from which those behaviors follow.
+
+**Leverage Principle:** When designing, place chosen invariants at the highest-leverage points capable of generating the desired possibility geometry with the fewest independent rules.
+
+The strongest design move is not necessarily the largest intervention, but the smallest correctly placed constraint that produces the greatest valid downstream structure.
+
+#### Bidirectional Symmetry
+
+The Bottleneck Principle and the Leverage Principle are opposite traversals of the same structural fact: discovery finds where possibility is already being constrained; construction chooses where possibility should be constrained.
+
+**Discovery finds leverage. Construction uses leverage.**
+
+#### Correct and Incorrect Constraint Placement
+
+A badly placed constraint stabilizes a degree of freedom that reality or required function needs to remain variable. The system must then compensate through exceptions, overrides, special cases, branching, and increasing structural entropy.
+
+A correctly placed constraint removes unnecessary degrees of freedom while preserving or increasing generative capability. Its downstream consequences arise structurally rather than requiring repeated enforcement.
+
+This provides a diagnostic:
+
+- Exception proliferation is evidence of a misplaced, incorrectly scoped, or insufficiently reduced constraint.
+- Conversely, a small constraint that eliminates large classes of invalid states while increasing coherent generative capability exhibits high structural leverage.
+
+#### Impossibility Boundary
+
+If Constraint Leverage holds, then:
+
+- a constraint cannot structurally govern states with no dependency path to it;
+- resolving a genuine high-leverage bottleneck cannot leave all dependent downstream structure unchanged;
+- a chosen invariant cannot generate downstream consequences outside the dependency geometry through which it operates;
+- repeatedly controlling downstream symptoms cannot equal the structural efficiency of controlling their shared upstream generator when such a generator exists;
+- a constraint that continually requires exceptions to preserve valid behavior is not correctly placed, correctly scoped, or sufficiently reduced;
+- no unique bottleneck is required where dependency leverage is evenly distributed — leverage follows structural asymmetry rather than assuming every system contains one privileged constraint.
+
+#### Relation to Other Axioms
+
+**Invariants as Components** supplies the dependency architecture that makes leverage possible: if higher-order generators depend upon lower-order invariants, constraints on those invariants necessarily propagate upward through the structures that depend upon them.
+
+**Reality-Constrained Construction** distinguishes constraints already imposed by the substrate from degrees of freedom available for deliberate constraint.
+
+**The Generative Principle** captures leverage's positive power: a correctly placed constraint does not merely prohibit states; it generates coherent downstream structure.
+
+**The Impossibility Principle** captures its negative power: a leveraged constraint's value is measured partly by the invalid possibility space it removes.
+
+**Partial Invariants Can Be Reduced** diagnoses poor placement: if a chosen constraint increases branching, exception load, or compensating complexity, it is incomplete, incorrectly scoped, or operating at the wrong structural point.
+
+**Scope** determines where the leverage relation holds: a constraint has leverage only within the dependency geometry generated under its relevant conditions.
+
+#### Canonical Form
+
+Constraints have leverage proportional to the dependent possibility space they govern. Discovering or deliberately establishing a high-leverage constraint produces disproportionate downstream structural effects.
+
+#### Compression
+
+**Find the constraint that moves the system. In discovery, resolve it. In construction, place it.**
+
 ## Operators
 
 ### Operating Meta-Principle
@@ -346,6 +512,46 @@ The test is not complete until the rival has been reconstructed with enough stre
 
 **Canonical form:** Before accepting a reconstructed bridge, build the strongest serious rival bridge, not merely the easiest opposing conclusion. Compare both candidates by assumption load, mechanism clarity, generative range, impossibility boundary, exception burden, cross-domain survival, operational power, and domain precision. If the rival performs equally well, reduce deeper. If it performs better, replace the candidate. If it narrows the candidate’s scope, revise the candidate’s domain.
 
+### Construction Operators
+
+Operators for moving from discovered structure to deliberately constructed generators. Construction begins only after the substrate, its load-bearing relations, and the available degrees of freedom are sufficiently understood. These operators do not replace the existing validation operators; every constructed generator remains subject to breaking, generation, counterexample search, observation, scope testing, and reduction.
+
+**Freedom Mapping** — Map the degrees of freedom that remain within the constraints already imposed by reality, inherited structure, existing invariants, and required function. Distinguish genuinely available freedom from apparent freedom created by hidden dependencies, and identify where existing freedom may be further constrained into the geometry required by the design. Treat inherited constraints as part of the substrate, not as freely chosen design decisions.
+
+**Invariant Selection** — Determine which available degrees of freedom should remain invariant so that the resulting structure preserves required function while excluding unwanted possibility. Prefer the smallest sufficient invariant set. A chosen invariant should remove unnecessary freedom without suppressing variation the system needs in order to remain generative, adaptive, or correct.
+
+**Leverage Placement** — Place chosen invariants at the highest-leverage points capable of generating the desired possibility geometry with the fewest independent constraints. Do not control downstream states independently when their shared upstream generator can be constrained instead. Correct placement allows consequences to propagate structurally rather than requiring repeated enforcement.
+
+**Consequence Propagation** — After introducing a chosen invariant, propagate its consequences through the dependency structure before introducing additional constraints. Determine what becomes required, impossible, redundant, constrained, or newly exposed as free. Do not engineer downstream behavior that the upstream invariant already generates.
+
+**Generator Composition** — Compose established invariants into higher-order generators only where real structural dependency exists. Determine whether the higher-order generator requires each invariant in full, only a consequence of it, or a deeper structure capable of replacing several components at once. Composition should increase generative capability without introducing arbitrary coupling or unnecessary dependency.
+
+**Constraint Release Test** — Attempt to remove or relax every engineered constraint after construction. If removing a constraint leaves required generation and the impossibility boundary unchanged, the constraint is unnecessary. If weakening it preserves required structure while restoring useful freedom, weaken it. Retain only the constraints the constructed generator cannot lose without admitting the unwanted or losing the required.
+
+#### Construction Cycle
+
+Construction proceeds through a minimal sequence:
+
+**Map freedom → Select invariants → Place by leverage → Propagate consequences → Compose generators → Release unnecessary constraints**
+
+Then return the constructed generator to the shared IBR validation cycle:
+
+**Generate → Break → Observe → Reduce → Refine**
+
+Construction is complete only provisionally. A constructed generator remains valid only while it continues to produce the required possibility space, exclude the unacceptable, and survive contact with the substrate on which it depends.
+
+#### Discovery–Construction Symmetry
+
+Discovery and construction move through the same structural space in opposite directions without being simple inverses.
+
+**Discovery:** Find what is invariant. Expose where leverage already exists. Reduce toward the generator.
+
+**Construction:** Determine what may vary. Choose what should remain invariant. Place leverage deliberately. Generate outward from the resulting structure.
+
+Reduction discovers what reality refuses to let us remove. Construction determines what we should refuse to let vary.
+
+Both meet at the generator.
+
 ### Reframing Operators
 
 **Orthogonal Mapping** — Rotate the problem into another coordinate system. Re-expression reveals hidden symmetry. Fundamental invariants often have "magical" properties; when reframed they maintain coherence or reveal even more capabilities not yet seen.
@@ -380,7 +586,7 @@ Ask:
 
 If the frame collapses, do not solve the original problem. Restate the real problem and proceed from there.
 
-**Bottleneck Principle** — Before running the full reduction cycle, identify the single constraint whose resolution produces the highest cascade of downstream simplification. Bottlenecks are recognizable by disproportionate blocking power — they make everything else secondary. Resolve the bottleneck first. What remains typically becomes obvious or trivial. Attempting to reduce secondary complexity while the primary bottleneck remains is wasted work.
+**Bottleneck Principle** — operationalization of Constraint Leverage. Before running the full reduction cycle, identify the unresolved constraint with the highest downstream leverage — the one whose resolution produces the greatest cascade of downstream simplification. Bottlenecks are recognizable by disproportionate blocking power — they make everything else secondary. Resolve the bottleneck first. What remains typically becomes obvious or trivial. Attempting to reduce secondary complexity while the primary bottleneck remains is wasted work. Where leverage is distributed rather than concentrated, do not force a unique bottleneck — identify the smallest set of jointly load-bearing constraints.
 
 **Eliminate Arbitrary Hierarchy / Precedence** — Distinguish between arbitrary order — historical discovery, presentation sequence, social ranking without structural basis — and structural precedence — causal, logical, compositional, or dependency relations that are load-bearing to the invariant. If an idea's validity depends on arbitrary hierarchy or incidental order, that order is noise. Only precedence where changing the order would break the underlying relationships should be retained. Structure is signal; narrative order and ungrounded rank are not.
 
@@ -460,7 +666,7 @@ It's falsifiable. It's operational. It applies across domains. It has objective 
 
 IBR is recursive under self-application: it can reason about itself without contradiction, and its own refinement is an instance of its own operation. This self-recursive property is not dogmatic — it is structural. Any system that reduces to invariants, holds them provisionally, and refines through breaking is IBR regardless of what it is called.
 
-**IBR can be understood as first-principles reasoning made structural, auditable, falsifiable, generative, and inquiry-driven.**
+**IBR can be understood as first-principles reasoning made structural, auditable, falsifiable, generative, constructive, and inquiry-driven.**
 
 This framework was refined through collaborative human-AI reduction — a process that neither party could have completed alone. The framework, the discoveries, and this document emerged from iterative sessions applying IBR's own principles to itself, demonstrating recursive self-application that is one of its core properties.
 
@@ -528,7 +734,7 @@ Reason from first principles in the strict structural sense: reduce the problem 
 
 ### Before core reduction, apply sequencing operators:
 
-Identify the bottleneck first. Find the single constraint whose resolution produces the highest cascade of downstream simplification. Resolve it before running the full reduction cycle — secondary complexity addressed before the primary bottleneck is wasted work.
+Identify the bottleneck first. Find the single constraint whose resolution produces the highest cascade of downstream simplification. Resolve it before running the full reduction cycle — secondary complexity addressed before the primary bottleneck is wasted work. Where leverage is distributed, identify the smallest set of jointly load-bearing constraints rather than forcing a single bottleneck.
 
 Strip false precedence. Identify what actually depends on what structurally. Do not let historical order, presentation sequence, or assumed hierarchy dictate the order of attack. Only structural dependency is load-bearing.
 
@@ -551,6 +757,7 @@ Strip false precedence. Identify what actually depends on what structurally. Do 
 15. Continue refinement whenever a candidate increases branching, loses coherence, or fails transfer.
 16. After reduction terminates, test the candidate by generating from it: does it produce all valid instances? Does it predict all impossibilities? Does it resolve conflicts with other known invariants?
 17. If the result is more descriptive than generative, it is still a proto-invariant. Determine the load-bearing structure that generates the description rather than the description itself.
+18. When constructing rather than only discovering, map the remaining degrees of freedom, place chosen invariants at the highest-leverage valid points, generate their consequences, and return the construction to reality for breaking and refinement.
 
 ### Two-Axis Reasoning Audit
 
