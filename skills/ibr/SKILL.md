@@ -17,7 +17,7 @@ Load the IBR framework and operate with it.
 
 **First check whether the framework is already in context.** It often is: injected via
 `--append-system-prompt-file`, loaded by an earlier `/ibr` this session, or pasted into the
-conversation. Telltales: the "Invariant-Based Reasoning (IBR) — Framework" document with its
+conversation. Telltales: the "Invariant-Based Reasoning (IBR)" document with its
 axioms (Reality Has Invariants, The Breaking Principle, Scope…), the Wielder Principle, the
 Truth-Over-Self-Protection Invariant. If present, **do not read the file again** — a second
 copy pollutes context and adds nothing. Confirm in one line that the framework is already

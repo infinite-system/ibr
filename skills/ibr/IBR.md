@@ -1,4 +1,4 @@
-# Invariant-Based Reasoning (IBR) — Framework
+# Invariant-Based Reasoning (IBR)
 
 ## Definition
 
@@ -768,7 +768,7 @@ The framework applied to itself, on a real candidate from its own history.
 
 **Scope.** Holds wherever reduction is the method of conclusion. Status: discovered relation (reduction needs a field), chosen standard (widen it before trusting what survives).
 
-**Generate.** A true invariant audits the system it joins. The new axiom immediately exposed a false note in an existing one: the axiom then named *Noise is Higher than the Invariant* called the field "noise" — but a supply line cannot be noise. The axiom was renamed **Variation Obscures the Invariant** and split variation into expression and noise proper. One reduction produced a second finding nobody was looking for.
+**Generate.** A true invariant audits the system it joins. The new axiom immediately exposed a false note in an existing one: the axiom then named *Variation Obscures the Invariant* called the field "noise" — but a supply line cannot be noise. The axiom was renamed **Variation Obscures the Invariant** and split variation into expression and noise proper. One reduction produced a second finding nobody was looking for.
 
 **Result.** The candidate survived breaking with refinement — the third outcome the Breaking Principle names — and entered the framework as **Expansion Feeds Reduction**. The wielder brought the intuition; the method cut it to its true scope. That division of labor is IBR working as designed.
 

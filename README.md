@@ -109,8 +109,8 @@ are not laws of nature, and physics is not up for a vote.
 **The axioms say what they are.** IBR applies its own construction to itself: each axiom
 is marked **discovered** (reality enforces it on any reasoner), **chosen** (a standard the
 method places on the wielder so it cuts), or a discovered relation carrying a chosen
-standard. You always know which parts are true regardless of you, and which parts are
-choices that stay only while they sharpen reasoning.
+standard. So you can tell what reality enforces from what the method chooses — and every
+choice has to keep earning its place.
 
 **All of it is provisional — structurally, not apologetically.** No concept is identical
 to the reality it models. Every invariant is held only until a deeper one replaces it.
