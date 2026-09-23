@@ -714,6 +714,64 @@ IBR is recursive under self-application: it can reason about itself without cont
 
 This framework was refined through collaborative human-AI reduction — a process that neither party could have completed alone. The framework, the discoveries, and this document emerged from iterative sessions applying IBR's own principles to itself, demonstrating recursive self-application that is one of its core properties.
 
+## Axiom Dependency Map
+
+An axiom **rests on** another when its claim needs the other to hold, while the other does not need it — structural precedence, as defined under Invariants as Components. The order of the axioms above is presentation order. Here the ground comes first, then the rows run from discovered, through discovered relations carrying a chosen standard, to chosen standards — from what reality enforces to what the method enforces on the wielder. Within each group, rows keep dependency order; the Rests-on column carries the dependencies themselves. Like every structure in IBR, the map is provisional: a deeper reduction may merge nodes or reroute edges.
+
+| Axiom | Rests on | Status |
+|---|---|---|
+| Reality Has Invariants | — (ground) | Discovered relation, chosen direction |
+| Variation Obscures the Invariant | Reality Has Invariants | Discovered |
+| Expression is Not Essence | Reality Has Invariants | Discovered |
+| Scope | Reality Has Invariants | Discovered |
+| Invariant Reinforcement | Reality Has Invariants | Discovered |
+| Observer Principle | Variation Obscures the Invariant | Discovered |
+| Provisionality | Expression is Not Essence | Discovered |
+| Invariants as Components | Reality Has Invariants, Scope | Discovered |
+| Invariants are Discoverable by Reduction | Variation Obscures the Invariant | Discovered relation, chosen direction |
+| Expansion Feeds Reduction | Discoverable by Reduction, Observer Principle | Discovered relation, chosen standard |
+| Simplicity is the Signature | Discoverable by Reduction | Discovered relation, chosen direction |
+| Convergence Validation | Provisionality | Discovered relation, chosen weighting |
+| Generative Principle | Discoverable by Reduction, Impossibility Principle | Discovered relation, chosen standard |
+| Reality-Constrained Construction | Discoverable by Reduction, Scope, Invariants as Components | Discovered relation, chosen procedure |
+| Constraint Leverage | Invariants as Components, Reality-Constrained Construction | Discovered relation, chosen strategy |
+| Partial Invariants Can Be Reduced | Simplicity is the Signature | Chosen standard |
+| Breaking Principle | Provisionality | Chosen standard |
+| Impossibility Principle | Breaking Principle | Chosen standard |
+| Domain-Crossing is the Validator | Breaking Principle, Scope | Chosen standard |
+| Component Principle | Discoverable by Reduction, Breaking Principle | Chosen standard |
+| Proof Principle | Discoverable by Reduction, Generative Principle, Breaking Principle | Chosen standard |
+
+Read as a structure, the map has one ground and three spines:
+
+- **The discovery spine** — Reality Has Invariants → Variation Obscures → Discoverable by Reduction → Simplicity → Partial Invariants. How the invariant hides and how it is found.
+- **The validation spine** — Expression is Not Essence → Provisionality → Breaking → Impossibility, Domain-Crossing, Convergence. Why every finding must be attacked, and how.
+- **The construction spine** — Invariants as Components → Reality-Constrained Construction → Constraint Leverage. How found structure composes and becomes a platform for building.
+
+The spines meet at the Proof Principle, which closes discovery and validation into one loop, and at Expansion Feeds Reduction, which ties discovery to observation. Discovered axioms sit toward the ground; chosen standards sit where the method acts on the wielder. No chosen standard is load-bearing for a discovered axiom — reality does not depend on the method's choices.
+
+## Worked Example — Reducing a Candidate Axiom
+
+The framework applied to itself, on a real candidate from its own history.
+
+**Surface.** A wielder proposes a missing principle: *Expansion is Exploration.*
+
+**Frame audit.** Is the gap real? Expansion already appears in the framework, but only scattered: a Constraints line permits "intermediate exploration," Simplicity carries an escape clause for expansion that restores distinctions, and the operators Domain Transfer, Counterexample Search, the Generation Test, and the Observer Principle are all expansion moves. Something load-bearing exists and has no name. The candidate points at a real structure.
+
+**Break.** State it universally and attack it. Exception-patching is expansion. Scope creep is expansion. Adding branches to a model is expansion. None of these is exploration — each is the exact symptom Partial Invariants Can Be Reduced diagnoses. As stated, the candidate blesses generator bloat. Severity: **scoping**, not fatal — the candidate is right about something and too broad about the rest.
+
+**Reduce.** Find the distinction the counterexamples expose. Expansion splits in two: expansion of the **field** — more cases, domains, generated instances, attempted breaks — and expansion of the **generator** — more rules, branches, exceptions. Only the first is exploration.
+
+**Mechanism bridge.** Why does field expansion serve reduction? Elimination needs something to eliminate against. An invariant can only be trusted against the variation actually held; reduction over a narrow field compresses to a false floor.
+
+**Impossibility boundary.** If this holds, then no invariant derived without field expansion may be treated as final; no compression skill substitutes for a wide field; and "it survived everything I tried" carries no weight when little was tried.
+
+**Scope.** Holds wherever reduction is the method of conclusion. Status: discovered relation (reduction needs a field), chosen standard (widen it before trusting what survives).
+
+**Generate.** A true invariant audits the system it joins. The new axiom immediately exposed a false note in an existing one: the axiom then named *Noise is Higher than the Invariant* called the field "noise" — but a supply line cannot be noise. The axiom was renamed **Variation Obscures the Invariant** and split variation into expression and noise proper. One reduction produced a second finding nobody was looking for.
+
+**Result.** The candidate survived breaking with refinement — the third outcome the Breaking Principle names — and entered the framework as **Expansion Feeds Reduction**. The wielder brought the intuition; the method cut it to its true scope. That division of labor is IBR working as designed.
+
 ## Operational Manual for AI
 
 To be internalized before operational execution.
