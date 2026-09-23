@@ -18,11 +18,15 @@ Reduce to the smallest generator that preserves all valid structure, excludes th
 
 ## Core Axioms
 
+The axioms are themselves invariants, and IBR applies its own Reality-Constrained Construction to them. Some are **discovered**: relations reality already enforces on any reasoner, whether or not the reasoner accepts them. Some are **chosen**: constraints deliberately placed on the reasoner so that the method cuts — standards of acceptance, proof, and attack that make IBR what it is, a sword of reasoning rather than a description of it. Many are **discovered relations carrying a chosen standard**: reality supplies the relation, and the method builds its standard on it. A chosen axiom is not arbitrary. It obeys the same rule as every chosen invariant: the choice is free, its consequences are not, and it stays only while it generates better reasoning than its absence. Each axiom closes with its status, so a wielder knows which parts reality enforces and which parts the method enforces on the wielder.
+
 ### Axiom — Reality Has Invariants ^reality-invariants
 
-There exist objective patterns that remain stable across transformations within a domain. If a structure survives change, it reveals real structure of that domain. This is the foundational assumption. Without it, reasoning reverts to relativism or pure subjectivity.
+There exist objective patterns that remain stable across transformations within a domain. If a structure survives change, it reveals real structure of that domain. This is the foundational observation. Without it, reasoning reverts to relativism or pure subjectivity.
 
 What kind of real the structure is varies by domain — made precise in the Scope Axiom below.
+
+**Status — Discovered relation, chosen direction.** That reality has invariants is observed, not assumed: coherent observation already contains repeating structure, and any attempt to refute it must use the very invariants it denies. Digging toward them — making the search for invariants the direction of reasoning — is the method's choice.
 
 ### Axiom — Variation Obscures the Invariant ^variation-obscures
 
@@ -30,9 +34,13 @@ Any system presents more variation than invariant core. The invariant is always 
 
 Variation divides into expression — the generator showing itself in many forms — and noise, which carries no signal. To passive inspection variation obscures the invariant; to an observer who tracks what survives it, variation is the medium of discovery: invariance is only visible ACROSS variation. The goal of IBR is therefore not to search the space, but to compress it to the invariant core — treating variation as evidence and discarding only what carries no signal.
 
+**Status — Discovered.** The size asymmetry between generator and field holds whether or not anyone looks.
+
 ### Axiom — Invariants are Discoverable by Reduction ^discoverable-reduction
 
 Removing non-essential parts reveals essential structure. The correct direction of thought is reduction, not accumulation. This is why IBR feels like "carving away."
+
+**Status — Discovered relation, chosen direction.** Elimination reveals structure; making reduction the default direction of thought is the method's choice.
 
 ### Axiom — Expansion Feeds Reduction ^expansion-feeds-reduction
 
@@ -44,6 +52,8 @@ Impossibility boundary: if this axiom holds, then no invariant derived without f
 
 Reduction and expansion form a two-stroke process: reduction compresses toward the invariant, while expansion supplies the variation against which that compression becomes trustworthy. Read alone, the reduction gradient trains a wielder to treat all expansion as waste — producing premature compression and reluctance to explore. Domain Transfer, Counterexample Search, the Generation Test, and the Observer Principle's contact with variation are therefore not departures from reduction; they are its second stroke — what gives reduction enough reality to reduce against.
 
+**Status — Discovered relation, chosen standard.** Reduction without a field compresses to a false floor; widen the field before trusting what survives it.
+
 ### Axiom — Simplicity is the Signature of Deep Reduction ^simplicity-signature
 
 Reduction yields structure more compact than what it generates. Persistent complexity signals deeper reduction may be available; compression is the direction. Whether reality is simple at its base remains an empirical question, not a structural commitment.
@@ -52,9 +62,13 @@ Simplicity here does not mean shortest expression or smallest surface form. It m
 
 Deeper reduction yields more compact structure. Foundational invariants compress vast complexity into minimal form. Surface phenomena may remain complex, but the generators producing them contract. Compression is not a claim about appearance — it is what reduction produces when allowed to go all the way. What survives reduction has no room for what does not have to be there. Truth does not grow — it contracts. What remains is what reality refuses to delete.
 
+**Status — Discovered relation, chosen direction.** Deep generators contract; treating compression as the direction of search is chosen, and whether reality is simple at its base stays an open empirical question.
+
 ### Axiom — Domain-Crossing is the Validator ^domain-crossing
 
 A candidate invariant must survive across domains sufficiently related to the problem at hand — defined by invariance under the same transformation rules over the same class of variables. Survival across structurally equivalent domains increases confidence in fundamentality. This prevents false negatives where genuinely true but domain-specific invariants get rejected because they don't apply universally. Thermodynamics doesn't need to work in social systems for it to be real physics.
+
+**Status — Chosen standard.** A validation criterion placed on candidates, scoped to structurally equivalent domains.
 
 ### Axiom — The Provisionality Principle ^provisionality
 
@@ -74,6 +88,8 @@ The deepest known invariant of conceptual knowledge is therefore provisionality 
 
 IBR is recursive under self-application: it can be used to refine its own formulations without leaving its own method. This is not a claim of perfection, but of structural closure under provisional self-improvement.
 
+**Status — Discovered.** No concept is identical to the reality it models.
+
 ### Axiom — Partial Invariants Can Be Reduced ^partial-reduction
 
 If a proposed invariant increases capability but also increases branching or variance in its final form, then it is not yet the final invariant. Continue reduction.
@@ -82,25 +98,35 @@ Or in canonical form: A true invariant decreases structural entropy. A false or 
 
 This gives us a diagnostic for when an "invariant" is actually still a proto-invariant.
 
+**Status — Chosen standard.** A diagnostic placed on candidates: rising branching means reduction is not finished.
+
 ### Axiom — Invariant Reinforcement ^invariant-reinforcement
 
 Invariants reinforce surrounding structure when correct. Reinforcement is supporting evidence, not proof — false invariants can reinforce within substrates that share their assumptions. Reinforcement that holds under tests from independent substrates is the stronger signature.
 
 Conflict resolution as corollary: Apparent conflicts between concepts are diagnostic of surface-level understanding. At the invariant level, true structures cohere. If two honestly reduced invariants genuinely contradict, at least one reduction is incomplete. True invariants do not merely avoid conflict — they actively complete each other. 
 
+**Status — Discovered.** True structures cohere; the weighting of reinforcement as evidence, not proof, is chosen.
+
 ### Axiom — The Breaking Principle ^breaking-principle
 
 A candidate invariant is not accepted until you actively try to destroy it. Weak ideas only survive passive agreement. True invariants survive attacks. If it survives breaking → it is structural. If it collapses → it was noise or partial invariant. If breaking reveals refinement → evolution continues.
 
+**Status — Chosen standard.** No acceptance without an attempted destruction — the method's edge.
+
 ### Axiom — Convergence Validation ^convergence-validation
 
 When multiple independent reducers (human, AI, or hybrid) apply IBR to the same problem and arrive at the same invariant, this is supporting evidence, not proof. Convergence across different starting frameworks strengthens the signal; convergence within a shared framework can reflect shared error in that framework — false invariants can reinforce within substrates that share their assumptions. Care must be taken that independent reducers work from first principles rather than analogy, otherwise they run the risk of validating via an implicitly assumed and agreed-upon metaphor. The signal is real, but it never closes the question.
+
+**Status — Discovered relation, chosen weighting.** Independent reducers do converge on real structure; treat convergence as evidence, never as proof.
 
 ### Axiom — Expression is Not Essence ^expression-essence
 
 An invariant is not the same thing as any one implementation, encoding, notation, framework, or representation of it. A true invariant may admit multiple expressions while preserving the same underlying structure. The invariant is what survives translation between forms, not the local form itself. Confusing an implementation with the invariant creates dogma, blocks reduction, and mistakes syntax for reality.
 
 This axiom is the structural basis for the distinction between subjective and objective in conceptual domains. What appears subjective — the endless variation in how concepts like love, fairness, and success are expressed across cultures — is variation in expression. The invariant generators beneath those expressions are objective. The apparent subjectivity was never in the concept. It was in the confusion between generator and expression.
+
+**Status — Discovered.** The invariant survives translation between forms; no single form is the invariant itself.
 
 ### Axiom — The Impossibility Principle ^impossibility
 
@@ -111,6 +137,8 @@ This is the _negative space_ requirement, borrowing from visual art: what surrou
 The operational form: for every candidate invariant, the wielder must be able to name specific instances that cannot occur if the invariant is true. The richer the impossibility set, the stronger the structural claim. Impossibility-prediction is what makes an invariant falsifiable and therefore real.
 
 This principle applies reflexively to IBR itself. IBR predicts that structured inquiry in reducible domains exhibits reduce-break-generate dynamics, and is falsified by reducible domains where competent application consistently fails to produce reductions, or by structured inquiry that consistently succeeds in reducible domains without these dynamics.
+
+**Status — Chosen standard.** Every accepted invariant must state what it forbids.
 
 ### Axiom — The Generative Principle ^generative-principle
 
@@ -126,6 +154,8 @@ Invariants generate not only within their own domain but across levels. Each inv
 
 Apparent conflicts between concepts are diagnostic of incomplete surface-level understanding. At the invariant level, true generators cohere. If two honestly reduced invariants genuinely contradict, at least one reduction is incomplete.
 
+**Status — Discovered relation, chosen standard.** Reduction and generation are two directions of one relationship; requiring generation before acceptance is chosen.
+
 ### Axiom — The Component Principle^component-principle
 
 A candidate generator must be decomposed into the smallest components, relations, and scope conditions that carry its generative function. A generator treated as indivisible cannot be fully reduced because its internal load-bearing structure remains hidden.
@@ -137,6 +167,8 @@ A generator is provisionally established only when every retained component, rel
 **Canonical form:** Decompose the generator. Attack every part. Retain only what the domain cannot lose without breaking generation or admitting the impossible.
 
 **Compression:** A structure is only as fundamental as its least-tested component.
+
+**Status — Chosen standard.** A procedure placed on generators: decompose and attack every part.
 
 ### Axiom — Invariants as Components^invariants-as-components
 
@@ -167,6 +199,8 @@ An invariant may function as a component of another invariant. Generators compos
 
 **Compression:**  
 What is a generator at one level can be a component at the next.
+
+**Status — Discovered.** Established invariants compose into higher-order generators wherever real dependency exists.
 
 ### Axiom — The Proof Principle ^proof-principle
 
@@ -211,6 +245,8 @@ When competing reconstructions are available, proof remains provisional until th
 
 Every reconstructed conclusion must state its surviving scope: where it holds, where it does not yet hold, and what would falsify or narrow it. A conclusion extended beyond its mechanism bridge becomes overclaim.
 
+**Status — Chosen standard.** The two proof modes and the audit are the method's acceptance criteria.
+
 ### Axiom — Scope: Every Invariant is an If–Then ^scope
 
 Every invariant is an if–then: *if these conditions hold, this follows.* What follows is never up to anyone and works the same in every domain. All the difference between domains sits in the **"if"** — how its conditions get set. Two questions settle it, and leave exactly three answers.
@@ -228,6 +264,8 @@ Either way the structure is real: found, not invented, and you can be wrong abou
 
 **So:** identify the right scope — chess rules aren't laws of nature, fairness wasn't decreed, physics isn't up for a vote. Finding what fairness *is* binds no one by itself to be fair — IBR's normative work is engineering on what it finds, not deriving obligations. Domains agree only where their "ifs" overlap — never at the level of free choices.
 
+**Status — Discovered.** Every invariant is an if–then, and the kinds of "if" are found, not decreed.
+
 ### Axiom — Observer Principle ^observer-principle
 
 Reasoning requires observation of the variation against which its invariants are claimed to hold.
@@ -243,6 +281,8 @@ The observer need not be separate from the reasoner. Observation is a role withi
 Understanding cannot be established once and then assumed. It remains conditional on the invariant continuing to account for observed variation within the substrate on which it depends.
 
 Reasoning advances through the closed relation between observation, reduction, generation, prediction, and renewed observation.
+
+**Status — Discovered.** Invariants gain meaning only against observed variation.
 
 ### Axiom — Reality-Constrained Construction ^reality-constrained-construction
 
@@ -334,6 +374,8 @@ Different domains instantiate this differently because their substrates differ. 
 
 **Find what is invariant. Determine what may vary. Choose what should remain invariant. Generate what follows.**
 
+**Status — Discovered relation, chosen procedure.** Construction on an unknown substrate collides with constraints it never mapped; first discover structure, then choose what to build on it.
+
 ### Axiom — Constraint Leverage ^constraint-leverage
 
 Within a structured possibility space, constraints differ in downstream leverage according to the dependency relations they govern. A constraint is **high-leverage** when many downstream states, relations, behaviors, or generators depend upon it, so changing, resolving, removing, or establishing it produces effects disproportionate to the apparent size of the intervention.
@@ -409,6 +451,8 @@ Constraints have leverage proportional to the dependent possibility space they g
 #### Compression
 
 **Find the constraint that moves the system. In discovery, resolve it. In construction, place it.**
+
+**Status — Discovered relation, chosen strategy.** Dependency geometry gives constraints unequal reach; resolving and placing at the highest-leverage point first is the method's choice.
 
 ## Operators
 
