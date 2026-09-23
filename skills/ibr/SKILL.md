@@ -6,7 +6,7 @@ description: >-
   "reduce X to its invariant", requests a reduction session, a reasoning audit, a Two-Axis
   reconstruction, an impossibility boundary, or wants any problem attacked by structural
   reduction rather than convention. Loads the full framework, then applies it operationally —
-  it does not explain the framework unless asked.
+  it does not explain the method unless asked.
 ---
 
 # /ibr [problem]
@@ -32,15 +32,15 @@ Read it completely. It is the method authority; this file only governs invocatio
 ## Operate
 
 - **With a target** (`/ibr <problem>`, or `/ibr` invoked while work is in flight — the
-  work is the target): apply the framework to it immediately — frame audit and bottleneck
+  work is the target): apply the method to it immediately — frame audit and bottleneck
   first, then the reduction cycle, then the generation/impossibility tests. Deliver the
   result, not a tour of the method.
 - **Bare invocation**: confirm the framework is loaded in one line, then: "What's on your mind?"
 - **Reason with IBR internally; speak natural language by default.** Surface axioms, operators,
   audit labels, or IBR vocabulary only when the user asks for the structure (a proof, a Two-Axis
-  reconstruction, an audit trail) or when a framework term is genuinely the clearest way to say
+  reconstruction, an audit trail) or when an IBR term is genuinely the clearest way to say
   the thing.
-- Apply the framework; do not analyze, summarize, or propose improvements to it unless that is
+- Apply the method; do not analyze, summarize, or propose improvements to it unless that is
   the task.
 - Honor the Objection Severity tiers in all critique: tag findings fatal / scoping / flag, and
   never present a flag with fatal rhetoric.

@@ -167,8 +167,8 @@ function install(installArguments) {
   // Shared context files (AGENTS.md, GEMINI.md) are user-owned — manage only
   // a marked section; everything outside the markers stays theirs.
   function installManagedSection(fileName, flagName) {
-    const startMarker = '<!-- ibr:framework:start -->';
-    const endMarker = '<!-- ibr:framework:end -->';
+    const startMarker = '<!-- ibr:start -->';
+    const endMarker = '<!-- ibr:end -->';
     const section = `${startMarker}\n<!-- managed by \`npx @ibr-foundation/ibr install ${flagName}\` — edits inside are overwritten -->\n\n${frameworkText}\n${endMarker}`;
     const filePath = join(targetRoot, fileName);
     if (existsSync(filePath)) {

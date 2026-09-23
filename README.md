@@ -67,9 +67,9 @@ IBR does three jobs, and they meet at one point — the generator:
 
 Understanding contracts toward generators; engineering expands from them. That closed
 loop — **reduce until irreducible, generate to confirm, build on what survives** — is what
-separates IBR from philosophy (which argues but does not converge), from opinion (which
-asserts without elimination), and from pattern matching (which recognizes without
-reducing). IBR is first-principles reasoning made structural, auditable, falsifiable,
+separates IBR from philosophy that can argue without converging, from opinion that
+asserts without elimination, and from pattern matching that recognizes without
+reducing. IBR is first-principles reasoning made structural, auditable, falsifiable,
 generative, and constructive.
 
 **Reality has invariants — observed, not assumed.** In any domain, some structure remains

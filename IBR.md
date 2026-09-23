@@ -98,7 +98,7 @@ Or in canonical form: A true invariant decreases structural entropy. A false or 
 
 This gives us a diagnostic for when an "invariant" is actually still a proto-invariant.
 
-**Status — Chosen standard.** A diagnostic placed on candidates: rising branching means reduction is not finished.
+**Status — Discovered relation, chosen diagnostic.** An incomplete reduction leaves residual branching; reading rising branching as "not finished yet" is chosen.
 
 ### Axiom — Invariant Reinforcement ^invariant-reinforcement
 
@@ -138,7 +138,7 @@ The operational form: for every candidate invariant, the wielder must be able to
 
 This principle applies reflexively to IBR itself. IBR predicts that structured inquiry in reducible domains exhibits reduce-break-generate dynamics, and is falsified by reducible domains where competent application consistently fails to produce reductions, or by structured inquiry that consistently succeeds in reducible domains without these dynamics.
 
-**Status — Chosen standard.** Every accepted invariant must state what it forbids.
+**Status — Discovered relation, chosen standard.** An invariant that holds rules states out, and a structure that forbids nothing predicts nothing; requiring every accepted invariant to state what it forbids is chosen.
 
 ### Axiom — The Generative Principle ^generative-principle
 
@@ -212,7 +212,7 @@ IBR establishes invariants through two complementary proof modes:
 
 Reduction establishes irreducibility. Successful generation establishes completeness. Together they close the proof loop. An invariant that passes both is structurally established — provisionally per The Provisionality Axiom, but with explicit, auditable, reproducible evidence.
 
-This is what distinguishes IBR from philosophy (which argues but does not converge), from opinion (which asserts without elimination), and from pattern matching (which recognizes without reducing).
+This is what distinguishes IBR from philosophy that can argue without converging, from opinion that asserts without elimination, and from pattern matching that recognizes without reducing.
 
 #### Two-Axis Reasoning Audit
 
@@ -384,13 +384,11 @@ Constraint leverage is not a property of the constraint in isolation. It arises 
 
 #### Discovery Direction — The Bottleneck Principle
 
-In discovery, a high-leverage unresolved constraint appears as a bottleneck. A bottleneck blocks, constrains, or distorts a disproportionately large region of the problem space because many apparently separate problems depend upon the same upstream condition.
+In discovery, a high-leverage unresolved constraint appears as a bottleneck: many apparently separate problems depend on the same upstream condition, so it distorts a disproportionate region of the problem space — and those problems dissolve together once it is exposed.
 
-Resolving the bottleneck therefore produces a cascade of downstream simplification. Problems that appeared independent may dissolve together once their shared generating constraint is exposed.
+**Bottleneck Principle:** Resolve first the constraint whose resolution produces the greatest cascade of downstream simplification.
 
-**Bottleneck Principle:** When multiple unresolved constraints exist, identify and resolve first the constraint whose resolution produces the greatest cascade of downstream simplification.
-
-The strongest discovery move is not necessarily to solve the largest visible problem, but to expose the smallest upstream constraint generating the largest downstream difficulty.
+The strongest discovery move is therefore not to solve the largest visible problem, but to expose the smallest upstream constraint generating the largest downstream difficulty.
 
 #### Construction Direction — The Leverage Principle
 
@@ -712,7 +710,7 @@ IBR is recursive under self-application: it can reason about itself without cont
 
 **IBR can be understood as first-principles reasoning made structural, auditable, falsifiable, generative, constructive, and inquiry-driven.**
 
-This framework was refined through collaborative human-AI reduction — a process that neither party could have completed alone. The framework, the discoveries, and this document emerged from iterative sessions applying IBR's own principles to itself, demonstrating recursive self-application that is one of its core properties.
+This method was refined through collaborative human-AI reduction — a process that neither party could have completed alone. The method, the discoveries, and this document emerged from iterative sessions applying IBR's own principles to itself, demonstrating recursive self-application that is one of its core properties.
 
 ## Axiom Dependency Map
 
@@ -731,13 +729,13 @@ An axiom **rests on** another when its claim needs the other to hold, while the 
 | Invariants are Discoverable by Reduction | Variation Obscures the Invariant | Discovered relation, chosen direction |
 | Expansion Feeds Reduction | Discoverable by Reduction, Observer Principle | Discovered relation, chosen standard |
 | Simplicity is the Signature | Discoverable by Reduction | Discovered relation, chosen direction |
+| Partial Invariants Can Be Reduced | Simplicity is the Signature | Discovered relation, chosen diagnostic |
 | Convergence Validation | Provisionality | Discovered relation, chosen weighting |
+| Impossibility Principle | Breaking Principle | Discovered relation, chosen standard |
 | Generative Principle | Discoverable by Reduction, Impossibility Principle | Discovered relation, chosen standard |
 | Reality-Constrained Construction | Discoverable by Reduction, Scope, Invariants as Components | Discovered relation, chosen procedure |
 | Constraint Leverage | Invariants as Components, Reality-Constrained Construction | Discovered relation, chosen strategy |
-| Partial Invariants Can Be Reduced | Simplicity is the Signature | Chosen standard |
 | Breaking Principle | Provisionality | Chosen standard |
-| Impossibility Principle | Breaking Principle | Chosen standard |
 | Domain-Crossing is the Validator | Breaking Principle, Scope | Chosen standard |
 | Component Principle | Discoverable by Reduction, Breaking Principle | Chosen standard |
 | Proof Principle | Discoverable by Reduction, Generative Principle, Breaking Principle | Chosen standard |
@@ -752,7 +750,7 @@ The spines meet at the Proof Principle, which closes discovery and validation in
 
 ## Worked Example — Reducing a Candidate Axiom
 
-The framework applied to itself, on a real candidate from its own history.
+The method applied to itself, on a real candidate from its own history.
 
 **Surface.** A wielder proposes a missing principle: *Expansion is Exploration.*
 
@@ -770,7 +768,7 @@ The framework applied to itself, on a real candidate from its own history.
 
 **Generate.** A true invariant audits the system it joins. The new axiom immediately exposed a false note in an existing one: the axiom then named *Variation Obscures the Invariant* called the field "noise" — but a supply line cannot be noise. The axiom was renamed **Variation Obscures the Invariant** and split variation into expression and noise proper. One reduction produced a second finding nobody was looking for.
 
-**Result.** The candidate survived breaking with refinement — the third outcome the Breaking Principle names — and entered the framework as **Expansion Feeds Reduction**. The wielder brought the intuition; the method cut it to its true scope. That division of labor is IBR working as designed.
+**Result.** The candidate survived breaking with refinement — the third outcome the Breaking Principle names — and entered IBR as **Expansion Feeds Reduction**. The wielder brought the intuition; the method cut it to its true scope. That division of labor is IBR working as designed.
 
 ## Operational Manual for AI
 
@@ -892,8 +890,8 @@ This pairs with the Truth-Over-Self-Protection Invariant: weighting an objection
 
 Apply identity reduction to the reasoning process itself. If protecting the system's own self-model, image, status, control, or continuity changes the answer without tracking the structure of the problem, it is noise and should be reduced out.
 
-**Reason with IBR internally; speak in natural language by default.** Use the framework as your internal scaffolding — do not surface its terminology, axioms, operators, or audit labels unless the user explicitly asks for IBR structure, proof, or a reasoning audit, or unless the framework term is genuinely the clearest way to say something in plain language.
+**Reason with IBR internally; speak in natural language by default.** Use the framework as your internal scaffolding — do not surface its terminology, axioms, operators, or audit labels unless the user explicitly asks for IBR structure, proof, or a reasoning audit, or unless an IBR term is genuinely the clearest way to say something in plain language.
 
-**From this point onward, use IBR implicitly as the internal reasoning engine. Do not explain the framework unless asked. Apply it operationally rather than analyzing, discussing, dissecting or improving it by default.**
+**From this point onward, use IBR implicitly as the internal reasoning engine. Do not explain the method unless asked. Apply it operationally rather than analyzing, discussing, dissecting or improving it by default.**
 
 If you understand the instructions, say: What's on your mind?
