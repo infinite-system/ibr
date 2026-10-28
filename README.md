@@ -7,7 +7,7 @@ that put it to work.
 
 - **`IBR.md`** — the full framework: the axioms (each marked discovered or chosen), the
   discovery, validation, and construction operators, the reduction/generation proof loop,
-  an axiom dependency map, a worked example, and the operational manual. Load it straight
+  an axiom status table with the three spines, a worked example, and the operational manual. Load it straight
   into an agent's system prompt — the most direct way to run IBR:
 
   ```bash
@@ -110,7 +110,9 @@ are not laws of nature, and physics is not up for a vote.
 is marked **discovered** (reality enforces it on any reasoner), **chosen** (a standard the
 method places on the wielder so it cuts), or a discovered relation carrying a chosen
 standard. So you can tell what reality enforces from what the method chooses — and every
-choice has to keep earning its place.
+choice has to keep earning its place. The *Blade Principle* names the asymmetry: reality forges the metal,
+the method chooses the shape of the blade, and no choice can make a discovered invariant
+true or false.
 
 **All of it is provisional — structurally, not apologetically.** No concept is identical
 to the reality it models. Every invariant is held only until a deeper one replaces it.
@@ -123,8 +125,8 @@ it is not the invariant yet — keep reducing.
 
 The full framework is in [`IBR.md`](./IBR.md). It ships in this package, so the copy you
 install always matches the version you run. **Where to start reading:** the *Worked
-Example* first — one real reduction, traced end to end — then the *Axiom Dependency Map*
-for the architecture (one ground, three spines), then the axioms and operators
+Example* first — one real reduction, traced end to end — then the *Axiom Status*
+table for the architecture (what is discovered, what is chosen; one ground, three spines), then the axioms and operators
 themselves.
 
 ## Provenance
