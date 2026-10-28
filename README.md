@@ -43,6 +43,73 @@ Installs are idempotent and refuse to clobber files you have customized
 (`--force` overrides). The AGENTS.md target manages only its own marked section —
 everything else in the file stays yours.
 
+## What you can ask IBR to do
+
+Point it at anything — a concept, a problem, a codebase, a plan, a book — and ask what
+must remain. Every use is that one question, asked at one of three steps:
+
+**Find it.** Reduce the thing to what it can't lose.
+
+```text
+/ibr Find the invariants in these books.
+/ibr What is fairness, reduced to its invariant?
+/ibr Our onboarding has twelve known issues. Which one constraint generates them?
+/ibr This function has seven branches for edge cases. What makes them one case?
+/ibr We keep arguing microservices vs. monolith. Is that the real question?
+```
+
+What comes back is a generator, plus what it forbids. Three it has already run:
+
+**"What is humor?"** → *The safe collapse of a held frame into a reframe.* Four parts, and
+deleting any one lands on something that isn't funny. With no frame set up, you get
+nonsense. With no violation, a platitude. With no reframe that resolves it, unease, which
+is the structure of horror. With no safety, a threat. It even explains why a joke explained
+in advance dies: the reframe arrives before the frame can fall.
+
+**"What is music?"** → *Not sound: structured transformation in time, where recurrence
+creates identity, variation creates life, and resolution creates felt truth.* A melody
+survives a new instrument, key, or tempo, but not a broken interval contour. Rhythm is
+permission and exclusion in time: move one hit, or remove one silence, and the groove
+collapses.
+
+**"What are the invariants of languages?"** → *A root is a generator; prefixes, suffixes,
+cases, and compounds are operators on it; a word is a generated expression.* In Russian,
+*ход* (going) becomes *вход* (entry), *выход* (exit), *переход* (crossing), *приход*
+(arrival), and *уход* (departure). Languages differ in how visibly they keep the generator,
+not in whether they have one. So translation preserves the generator, not the words.
+
+**Test it.** Try to break it, and ask what it rules out.
+
+```text
+/ibr Here's my plan for the pricing change. Try to break it.
+/ibr If this is true, what can't happen?
+/ibr Show me the reasoning behind that conclusion, step by step.
+```
+
+**Build from it.** Choose what stays fixed, and let the rest follow.
+
+```text
+/ibr Design an API versioning policy. What must stay invariant, and what should stay free?
+/ibr Which few review rules would make most of the others unnecessary?
+```
+
+`/ibr` loads the method for the session; in other agents it is already in the instructions,
+so just ask. Answers come in your problem's own language. To see the reduction itself —
+what was eliminated, what survived, what it forbids — ask *"show me the reduction."*
+
+### Keep a codebase's invariants
+
+`/invariants` records a project's load-bearing rules as `*.invariants.md` contracts and
+checks changes against them — cheapest before you build:
+
+```text
+/invariants Before I build this, does it break anything? [describe the change]
+/invariants check this diff
+/invariants bootstrap a contract for src/payments/
+```
+
+It proposes; it never edits contracts or code without your confirmation.
+
 ## Run the invariants checker
 
 The checker is a single-file Node script (>=18, no dependencies):
