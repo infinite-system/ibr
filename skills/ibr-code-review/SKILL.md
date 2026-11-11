@@ -7,9 +7,11 @@ description: >-
   each level against its evidence and turns the scores and the findings into one
   percentage. Runs as a one-off generic review, or as a stored review that repeats a
   module's review profile (*.ibr-code-review.md), once or as a hill climb that fixes what
-  each review finds until the score reaches a target. Use when the user says "review the invariants",
-  "score the contracts", "run an invariants review", "hill climb the score",
-  "/ibr-code-review", or asks for the next review round. Load the /ibr-code-invariants skill
+  each review finds until the score reaches a target. Also runs a self-check: the author of
+  a change checks and fixes its own work before asking for an independent review. Use when
+  the user says "review the invariants", "score the contracts", "run an invariants review",
+  "hill climb the score", "check my work before review", "/ibr-code-review", or asks for the
+  next review round, and when an agent has finished a change and is about to submit it. Load the /ibr-code-invariants skill
   too: it owns the contract format and the checker.
 ---
 
@@ -25,12 +27,16 @@ module's review profile (see Review profiles) and keeps its history, so rounds c
 compared. A **hill climb** repeats stored rounds, fixing what each round found, until a
 round reaches the target score or stops making progress.
 
+A **self-check** is different: the author of a change runs it on its own work before an
+independent review, fixes what it finds, and has no reviewer and no score (see Self-check).
+
 ## 1. Ask first
 
 Look for review profiles (`*.ibr-code-review.md`) in the repository, then ask in one
 question:
 
-- **One-off or stored?** List the profiles you found. A one-off review is generic: it
+- **Self-check, one-off or stored?** When you wrote the change under review, run a
+  self-check: you cannot review your own work independently. List the profiles you found. A one-off review is generic: it
   uses no profile, keeps no history, and can review code that has no contracts yet (it
   then reports findings with no score). A stored review repeats a profile; when the
   module has none, you draft one first (see Review profiles).
@@ -124,6 +130,8 @@ Write `round-<N>/ibr-code-review-notes.md` about the review itself, not the code
 - **Verdict**: one sentence on what the review was worth.
 - **Did well** and **did less well**: how the reviewer worked. Watch for known findings
   reported again, slips out of read-only, and scores that moved while the code did not.
+- **Self-check gaps**: which findings should the author's self-check have caught? A
+  finding a mechanical check would have caught goes into the self-check's gates.
 - **Adopt**: what the next round should change. For a stored review, propose each item
   as an edit to the profile, and apply it once the user agrees. For a one-off, offer to
   save the round's way of reviewing as a new profile.
@@ -333,6 +341,37 @@ after five rounds; or when only decisions remain.
 - No contracts means no score. A one-off review still reports findings; offer
   `/ibr-code-invariants --bootstrap` to write the first contract.
 - Never push or merge. Commit fixes only.
+
+## Self-check
+
+The author's own pass over its own change, before anyone else reviews it. It removes the
+cheap, obvious problems, so the independent review spends its time on what only
+independence can find. It never replaces that review.
+
+1. **Scope the change:** the author's diff against where its branch started
+   (`git diff $(git merge-base <base> HEAD)..HEAD`), plus uncommitted work.
+2. **Run the gates:**
+   - the checker, `ibr-code-invariants-check.mjs --all --refs`, with no problem the
+     change introduced;
+   - the tests and typecheck for the code the change touches;
+   - `/ibr-code-invariants` on the diff: no record `violated`, and no `stressed` record
+     left unexamined.
+3. **Ask the standards' questions of the diff:** each record's `Verification` in
+   `/ibr-code-standards`, or in the project's adopted standards. Start with "Every rule has
+   one home": for each rule the change touches, name its home, search for copies, and
+   check the home for flags or branches added for one caller.
+4. **Fix what you find yourself,** in your own code, then go back to step 2. Stop fixing
+   and report an item instead when it needs a decision (a behaviour, contract or data
+   change the task did not ask for), or when the same problem survives two attempts.
+5. **Finish.** When every gate is green and every question is answered with no problem
+   left that you could fix, the change is refined enough: recommend an independent review
+   (one-off, or stored when the module has a profile). Otherwise do not recommend it yet:
+   list what remains and why.
+
+A self-check never assigns a level or a score, never closes a finding, never weakens or
+rewords a record to pass, and writes nothing into the review's round folders. Its notes
+stay with the author: an independent reviewer's brief never includes them, so that review
+still starts fresh.
 
 ## Review profiles
 

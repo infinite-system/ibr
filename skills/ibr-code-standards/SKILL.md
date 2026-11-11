@@ -49,6 +49,9 @@ as "Copies of a rule drift apart" or "Readers rebuild what the code does not say
      second dependent needs the same thing, cut at what the two have in common.
   4. **Route every path through the home.** A path that cannot is an escape hatch: name
      it and give it a check.
+- **Before submitting a change:** run the `/ibr-code-review` self-check. It asks these
+  records' review questions of your diff, and you fix what it finds before anyone else
+  reviews it.
 - **Reviewing code:** each record's `Verification` is the review question. A violation is a
   finding, with the record's name.
 - **Adopting them in a project:** copy the records the project adopts into its own contract
