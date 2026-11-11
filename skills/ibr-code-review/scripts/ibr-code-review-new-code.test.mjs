@@ -111,6 +111,25 @@ test('code outside the scope that annotates its contracts is listed; other code 
   cleanup();
 });
 
+test("a profile folder's own scripts are not reported as module code outside the scope", () => {
+  const { root, git, write, cleanup } = repository();
+  write('docs/query-engine.ibr-code-review/query-engine.ibr-code-review.md', PROFILE);
+  write(
+    'docs/query-engine.ibr-code-review/scripts/query-engine.ibr-code-review-oracles.py',
+    '# derives answers from (docs/query-engine.invariants.md) declarations\n',
+  );
+  write('api/reports/totals.ts', '// invariant: Totals match the rows (docs/query-engine.invariants.md)\n');
+  git('add', '-A');
+  git('commit', '-q', '-m', 'profile folder');
+  const folderProfile = execFileSync('node', [CLI, '--profile', join(root, 'docs/query-engine.ibr-code-review/query-engine.ibr-code-review.md'), '--root', root], { encoding: 'utf8' });
+  assert.match(folderProfile, /- api\/reports\/totals\.ts/);
+  assert.doesNotMatch(folderProfile, /oracles\.py/);
+  // the same script, from a profile kept as a single file, is outside code like any other
+  const fileProfile = run(root, []);
+  assert.match(fileProfile.stdout, /oracles\.py/);
+  cleanup();
+});
+
 test('the first round treats the whole scope as new; bad input is refused', () => {
   const { root, round, cleanup } = repository();
   const first = run(root, []);

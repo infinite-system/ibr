@@ -37,11 +37,13 @@ or a named subset and why).
 
 How to build independent answers for Observed: the source of each expected answer (the
 specification or the declaration, never the system's own output), and how to compare.
+Name the oracle script, if there is one, and where it writes its comparisons
+(`ibr-code-review-observed/` in the round folder).
 
 ## Tracked measures
 
 Numbers recorded each round in `ibr-code-review-measures.json`, shown beside the score
-and never folded into it.
+and never folded into it. Name the script that writes them, if there is one.
 
 - <measure>: <what it counts, and how>
 
@@ -52,4 +54,5 @@ The screens, flows or endpoints to exercise by hand, and as which users.
 ## Presentation
 
 Optional: how this module presents a round's result, such as a script that builds a
-review page from the round folder.
+review page from the round folder. The page shows the score from
+`ibr-code-review-score.json` as it is and computes no number of its own.

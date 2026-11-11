@@ -45,7 +45,10 @@ review, never what to conclude.
    the smallest structure that would replace it, and set its severity by the simplicity
    test in "How findings change the score".
 6. Compare behaviour with independent answers wherever data exists, as Observed
-   describes. Save each comparison in `{{OUT}}/ibr-code-review-observed/`.
+   describes. Save each comparison in `{{OUT}}/ibr-code-review-observed/`. When the
+   profile provides oracle scripts, run them, and check one oracle by hand against the
+   declarations it derives from: a wrong oracle would make every Observed level wrong.
+   Report a wrong oracle as a finding.
 
 ## New since the last review
 

@@ -9,7 +9,7 @@
 // It scores nothing. Single file, Node >= 18, no dependencies; needs git.
 
 import { readFileSync, existsSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 
 const HELP = `ibr-code-review-new-code.mjs — the code a stored review has not seen yet
@@ -53,12 +53,19 @@ export function changedInScope(root, since, codePaths) {
     });
 }
 
-export function governedOutsideScope(root, contracts, codePaths) {
+export function governedOutsideScope(root, contracts, codePaths, ownFolder = null) {
   const annotated = new Map(); // path -> contracts it annotates
   for (const contract of contracts) {
     let output = '';
     try {
-      output = git(root, ['grep', '-l', '-F', `(${contract})`, '--', '.', ...codePaths.map((path) => `:!${path}`), ':!*.invariants.md', ':!*.ibr-code-review.md']);
+      output = git(root, [
+        'grep', '-l', '-F', `(${contract})`, '--', '.',
+        ...codePaths.map((path) => `:!${path}`),
+        ':!*.invariants.md',
+        ':!*.ibr-code-review.md',
+        // a profile folder's own scripts name its contracts; they are review code, not the module
+        ...(ownFolder ? [`:!${ownFolder}`] : []),
+      ]);
     } catch {
       continue; // git grep exits 1 when nothing matches
     }
@@ -115,7 +122,12 @@ function main(argv) {
     console.log(`First round: the whole scope is new (${scope.code.join(', ')}).`);
   }
 
-  const outside = governedOutsideScope(root, scope.contracts, scope.code);
+  // a profile kept in a folder of its own name (<module>.ibr-code-review/) owns that folder
+  const profileFolder = dirname(resolve(profilePath));
+  const ownFolder = basename(profileFolder).endsWith('.ibr-code-review')
+    ? relative(root, profileFolder)
+    : null;
+  const outside = governedOutsideScope(root, scope.contracts, scope.code, ownFolder);
   console.log('');
   console.log("## Code outside the profile's scope that annotates its contracts");
   if (outside.length === 0) console.log('None.');

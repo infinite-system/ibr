@@ -364,6 +364,36 @@ measure.
 finding, score or conclusion in it would anchor the reviewer. Findings live in the round
 folders and in `{{KNOWN}}`.
 
+**A file first, a folder when it needs code.** A profile starts as one file. When its
+review needs scripts (oracles that build independent answers, a runner for the coverage
+dimensions, a page builder), it becomes a folder of the same name, next to the contract,
+with the same layout as this skill and every file named after the profile:
+
+```
+docs/query-engine.ibr-code-review/
+  query-engine.ibr-code-review.md                the profile
+  scripts/query-engine.ibr-code-review-oracles.py
+  scripts/query-engine.ibr-code-review-oracles.test.py
+  scripts/query-engine.ibr-code-review-report.py
+  templates/query-engine.ibr-code-review-report.html
+```
+
+The same `*.ibr-code-review.md` search finds both forms. The profile's sections name the
+scripts they run: How to observe the oracles, Tracked measures the script that writes
+them, Presentation the page builder.
+
+**Profile scripts meet the review only in the round folder.** They may write
+`ibr-code-review-observed/`, `ibr-code-review-measures.json`,
+`ibr-code-review-substrate.json` and the review page. They never write
+`ibr-code-review-score.json` or a finding's status, and a page shows the score from
+`ibr-code-review-score.json` as it is, never a number of its own. So a module's scripts
+can add evidence and measures but can never change a score.
+
+**Profile scripts are code.** They follow the coding standards and have tests. An oracle
+that reads its declarations wrongly would make every round's Observed level wrong at
+once, so each round the reviewer also checks one oracle against the declarations it
+derives from (see the brief).
+
 **Making and keeping one.** On a module's first stored review, draft the profile from the
 code: read the substrate from lockfiles, package files and containers, propose the
 coverage dimensions, and ask the user to confirm before saving it. After each round,
@@ -373,7 +403,8 @@ change to how a module is reviewed shows in a diff.
 ## Files
 
 - `templates/ibr-code-review-brief.md`: the reviewer's brief, with its rules and output formats.
-- `templates/ibr-code-review-profile.md`: the sections of a module's review profile.
+- `templates/ibr-code-review-profile.md`: the sections of a module's review profile, as a
+  single file or as the profile file inside its folder.
 - `scripts/ibr-code-review-score.mjs`: computes the score (`--help` for the formats). Tests:
   `node --test scripts/ibr-code-review-score.test.mjs`.
 - `scripts/ibr-code-review-new-code.mjs`: lists the code a stored review has not seen yet
