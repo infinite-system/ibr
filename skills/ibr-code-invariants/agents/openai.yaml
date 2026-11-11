@@ -1,0 +1,4 @@
+interface:
+  display_name: 'IBR Code Invariants'
+  short_description: "Audit changes and contracts against a project's invariants"
+  default_prompt: "Use $ibr-code-invariants to audit this change against the project's reality-based and chosen invariants, following the skill's procedure exactly."

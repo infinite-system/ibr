@@ -9,20 +9,20 @@
 //     reference invariants by name, never by number (numbers rot when contracts reorder).
 //     Legacy numbered headings ('### PB-R001 — Name') still parse but draw a note.
 //   - names unique per file in slug-space; field values may wrap onto following lines
-//   - required fields: Invariant, Scope, Mechanism, Evidence, Impossible if true,
+//   - required fields: Invariant, Scope, Mechanism, Evidence, Rules out,
 //     Verification, Status (provisional|established), Last refined (YYYY-MM-DD)
 //   - optional fields: 'Renegotiable at' (reality records only), 'Components',
 //     'Generates', 'Rejected alternatives', 'Open question', 'Enforcement' (review-time
 //     enforcement declaration — records so marked are exempt from annotation coverage)
 //
 // Usage:
-//   check_invariants.mjs PATH            validate one contract
-//   check_invariants.mjs --all [ROOT]    discover and validate every *.invariants.md under
+//   ibr-code-invariants-check.mjs PATH            validate one contract
+//   ibr-code-invariants-check.mjs --all [ROOT]    discover and validate every *.invariants.md under
 //                                        ROOT (default: git toplevel or cwd); non-canonical
 //                                        files are reported and skipped, not failed;
 //                                        exits 2 if zero contracts exist under ROOT
 //   --strict                             with --all: non-canonical files fail instead of skip
-//   check_invariants.mjs --refs [ROOT]   scan code for
+//   ibr-code-invariants-check.mjs --refs [ROOT]   scan code for
 //                                        'invariant: <Name> (<root-relative contract path>)'
 //                                        annotations, test-file generator headers, source
 //                                        tripwires, companion links, and italic prose
@@ -37,64 +37,126 @@
 
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, relative, resolve, dirname, basename } from 'node:path';
-import { execSync } from 'node:child_process';
+import { execSync, execFileSync } from 'node:child_process';
 import process from 'node:process';
 
 // Bump when schema fields or validation semantics change.
-const VERSION = '3.2.0';
+const VERSION = '6.0.0';
 const GENERATOR_SUFFIX = '.generator.md';
 const LEGACY_LATTICE_SUFFIX = '.lattice.md';
 const GENERATOR_HEADING = '## Generator';
 const GENERATOR_SENTINEL = '=== GENERATOR ===';
 const GENERATOR_DESCRIBED_SENTINEL = '=== GENERATOR-DESCRIBED ===';
 const RETIRED_SPEC_SENTINELS = ['=== SPEC ===', '=== SPECIFICATIONS ==='];
+// `// local-invariant:` marks a claim recorded only in this file's header (canonical);
+// `// domain-invariant:` is its legacy alias and still resolves.
+const LOCAL_INVARIANT_KEYWORD_RE = /(?:local|domain)-invariant:/;
 const DOMAIN_INVARIANT_LINE_RE =
-  /^\s*\/\/\s*domain-invariant:\s*(.+?)\s+—\s+(.+)\s*$/;
+  /^\s*\/\/\s*(?:local|domain)-invariant:\s*(.+?)\s+—\s+(.+)\s*$/;
+// `// rules-out:` proves one thing a record rules out (canonical); `// impossible-if-true:`
+// is its legacy alias and still resolves.
+const RULES_OUT_KEYWORD_RE = /(?:rules-out|impossible-if-true):/;
 const IMPOSSIBLE_IF_TRUE_LINE_RE =
-  /^\s*\/\/\s*impossible-if-true:\s*(.+?)\s+—\s+(.+)\s*$/;
+  /^\s*\/\/\s*(?:rules-out|impossible-if-true):\s*(.+?)\s+—\s+(.+)\s*$/;
 const DOMAIN_INVARIANT_TRIPWIRE_RE =
-  /^\s*\/\/\s*domain-invariant:\s*([^—\n]+?)\s*$/;
+  /^\s*\/\/\s*(?:local|domain)-invariant:\s*([^—\n]+?)\s*$/;
+const LEGACY_TEST_HEADERS = new Set();
 
 const REALITY = '## Reality-based invariants';
 const CHOSEN = '## Chosen invariants';
 const CHOSEN_ALIAS = '## Designed invariants'; // legacy heading, accepted
 const HEAD_RE = /^### (.*\S)$/;
 const LEGACY_ID_RE = /^([A-Z][A-Z0-9]*)-([RCD])([0-9]{3})(?:\s+—\s+(.*))?$/;
-const FIELD_RE = /^(?:-\s+)?\*\*?([^*:]+):\*\*?\s*(.*)$/;
+// A field opens ONLY on a known label in bold at the start of a line —
+// `**Mechanism:** …`. Bold-labelled bullets and bold words inside a line are
+// the current field's body: a field spans paragraphs and lists until the next
+// label or heading. A label seen twice in one record is a problem, never a
+// silent overwrite. (The regex is built after the label lists below.)
+let FIELD_RE;
+// A non-bullet line that OPENS like a field (`**Mechansim:** …`) but names no
+// known label is a misspelled or newer-schema field, never silent body text —
+// otherwise a typo'd optional field would vanish into the field above it.
+const FIELD_SHAPE_RE = /^\*\*([^*:]+):\*\*/;
 const REQUIRED = [
   'Invariant',
   'Scope',
   'Mechanism',
   'Evidence',
-  'Impossible if true',
+  'Rules out',
   'Verification',
   'Status',
   'Last refined',
 ];
 const OPTIONAL = [
+  'Goal',
   'Renegotiable at',
   'Components',
   'Generates',
   'Rejected alternatives',
   'Open question',
   'Enforcement',
+  'Stands on',
 ];
+// labels earlier versions used, each read as its canonical label
+const FIELD_ALIASES = { 'Impossible if true': 'Rules out' };
+FIELD_RE = new RegExp(
+  '^\\*\\*(' +
+    [...REQUIRED, ...OPTIONAL, ...Object.keys(FIELD_ALIASES)].map((l) => l.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') +
+    '):\\*\\*\\s*(.*)$',
+);
 const STATUSES = new Set(['established', 'provisional']);
 const DATE_RE = /^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/;
 const EXCLUDED_DIRS = new Set(['node_modules', '.git', '.claude']);
-// `tmp/` is gitignored scratch and `agent-dispatches/` is archived agent
-// correspondence. Neither holds contracts, but both are FULL of annotation-shaped
-// text: builders quote `invariant:` lines in their transcripts and briefs cite
-// contracts by name. Scanning them reports thousands of "contract not found" for
-// relative paths that were never meant to resolve from there. This walk reads the
-// FILESYSTEM, not git, so .gitignore does not protect it — the same property that
-// once made a macOS `._Foo.ts` artifact red the grammar gate.
-const EXCLUDED_DIRECTORY_PATHS = new Set([
-  'scripts/retired-smokes',
-  'tmp',
-  'agent-dispatches',
-  '.invar',
-]);
+// The result must depend only on what the repository contains, so the walk skips
+// every path git ignores: a gitignored path is in no clone and no CI checkout, and
+// scanning it makes a live checkout disagree with a clean one (and scratch folders
+// of huge transcripts made the walk crawl). Tracked directories that still must not
+// be read — archived transcripts, retired harness scripts — are listed in an
+// optional `.invariantsignore` at the walk root: one root-relative directory per
+// line, `#` starts a comment. The checker itself names no project's layout.
+const IGNORE_FILE = '.invariantsignore';
+const IGNORED_BY_ROOT = new Map();
+const GITIGNORED_BY_ROOT = new Map();
+
+// Paths git ignores under root, relative to root: wholly ignored directories come back
+// as one `dir/` entry, so the listing stays small however large the ignored tree is.
+// Outside a git checkout (or without git) nothing is ignored this way.
+function gitIgnoredPaths(root) {
+  if (!GITIGNORED_BY_ROOT.has(root)) {
+    const directories = new Set();
+    const files = new Set();
+    try {
+      const output = execFileSync(
+        'git',
+        ['ls-files', '--others', '--ignored', '--exclude-standard', '--directory', '-z'],
+        { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 256 * 1024 * 1024 },
+      );
+      for (const entry of output.split('\0')) {
+        if (!entry) continue;
+        if (entry.endsWith('/')) directories.add(entry.slice(0, -1));
+        else files.add(entry);
+      }
+    } catch {
+      // not a git checkout, or git unavailable: walk the filesystem as before
+    }
+    GITIGNORED_BY_ROOT.set(root, { directories, files });
+  }
+  return GITIGNORED_BY_ROOT.get(root);
+}
+function ignoredDirectories(root) {
+  if (!IGNORED_BY_ROOT.has(root)) {
+    const ignored = new Set();
+    const file = join(root, IGNORE_FILE);
+    if (existsSync(file)) {
+      for (const raw of readFileSync(file, 'utf8').split(/\r?\n/)) {
+        const line = raw.replace(/#.*/, '').trim().replace(/^\.\//, '').replace(/\/+$/, '');
+        if (line) ignored.add(line);
+      }
+    }
+    IGNORED_BY_ROOT.set(root, ignored);
+  }
+  return IGNORED_BY_ROOT.get(root);
+}
 const ANNOT_RE =
   /(?<![\w-])invariant:\s*([^(\n]+?)\s*\(([^)\n]*\.invariants\.md)\)/g;
 // annotation-shaped lines that DON'T parse (typo'd suffix, wrong brackets) — flagged, not silent
@@ -242,9 +304,17 @@ function parseSection(lines, active, start, end, kind = 'domain') {
         const t = lines[i].trim();
         const f = FIELD_RE.exec(t);
         if (f) {
-          current = f[1].trim();
+          current = FIELD_ALIASES[f[1].trim()] ?? f[1].trim();
+          if (current in rec.fields) {
+            rec.duplicateFields = rec.duplicateFields || [];
+            rec.duplicateFields.push({ label: current, line: i + 1 });
+          }
           rec.fields[current] = f[2].trim();
           rec.fieldRanges[current] = { start: i + 1, end: i + 1 };
+        } else if (FIELD_SHAPE_RE.test(t)) {
+          rec.unknownFields = rec.unknownFields || [];
+          rec.unknownFields.push(FIELD_SHAPE_RE.exec(t)[1].trim());
+          current = null;
         } else if (t && current) {
           rec.fields[current] =
             (rec.fields[current] ? rec.fields[current] + ' ' : '') + t;
@@ -297,6 +367,7 @@ function validateRecords(
   seenSlugs,
   errors,
   notes,
+  requiredFields = REQUIRED,
 ) {
   let count = 0;
   for (const rec of records) {
@@ -325,6 +396,12 @@ function validateRecords(
           'creates invisible orphans), and platform heading anchors only agree on this charset',
       );
     }
+    if (!legacy && name.split(/\s+/).length > 12) {
+      notes.push(
+        `'${name}': name has ${name.split(/\s+/).length} words — names run 3 to 12 words; a longer one usually ` +
+          'joins two claims (split it, or use Components) or restates the if-then (move it to Invariant)',
+      );
+    }
     if (!legacy && /^-|-$|--/.test(name)) {
       notes.push(
         `'${name}': hyphens must be word-internal (no leading/trailing/double hyphens)`,
@@ -346,17 +423,30 @@ function validateRecords(
       seenSlugs.set(slug, name);
     }
     const fields = rec.fields;
-    for (const label of REQUIRED) {
+    for (const dup of rec.duplicateFields || [])
+      errors.push(`'${name}': ${dup.label} appears twice (line ${dup.line}) — one field, as many lines as it needs`);
+    for (const label of requiredFields) {
       if (!fields[label]) errors.push(`'${name}': missing or empty ${label}`);
     }
-    for (const label of Object.keys(fields)) {
-      if (!REQUIRED.includes(label) && !OPTIONAL.includes(label)) {
-        errors.push(
-          `'${name}': unknown field '${label}' (tolerated fields: ` +
-            `${[...REQUIRED, ...OPTIONAL].join(', ')}) — if this field is from a newer schema, ` +
-            `update this checker (--version prints ${VERSION})`,
-        );
-      }
+    // A chosen invariant (a composition included) is chosen FOR something: without its
+    // Goal the choice can be checked but never judged, so it can never be released.
+    // Reality was chosen by no one, so it has no goal.
+    if (isReality === true && fields['Goal']) {
+      errors.push(
+        `'${name}': Goal is only valid on chosen records — reality invariants were chosen by no one`,
+      );
+    }
+    if (isReality !== true && !fields['Goal']) {
+      errors.push(
+        `'${name}': chosen invariant needs Goal — the intent it was chosen for; construction without a goal cannot be judged or released`,
+      );
+    }
+    for (const label of rec.unknownFields || []) {
+      errors.push(
+        `'${name}': unknown field '${label}' (tolerated fields: ` +
+          `${[...REQUIRED, ...OPTIONAL].join(', ')}) — if this field is from a newer schema, ` +
+          `update this checker (--version prints ${VERSION})`,
+      );
     }
     if (fields['Renegotiable at'] && isReality === false) {
       errors.push(
@@ -378,7 +468,7 @@ function validateRecords(
 function validateGeneratorComponents(path, record, errors) {
   const components = record.fields.Components;
   if (!components) {
-    errors.push(`'${record.name}': generator record needs Components`);
+    errors.push(`'${record.name}': a legacy Generator record needs Components`);
     return;
   }
   const links = extractLinks(components);
@@ -450,7 +540,15 @@ function checkFile(path) {
       notes: [],
       summary: 'no canonical section headings (local format)',
     };
+  return validateContractLines(path, lines, active);
+}
+
+// The contract grammar, wherever it lives: a *.invariants.md file, or a test file's
+// header (where Evidence and Verification are the tests beneath, so not required).
+// `path` is the contract file; null for a test header, whose links its caller resolves.
+function validateContractLines(path, lines, active, requiredFields = REQUIRED) {
   const [sectionBounds, errors] = bounds(lines, active);
+  const records = { generator: [], reality: [], chosen: [] };
   const notes = [];
   lines.forEach((l, i) => {
     if (!active[i] && /^### \S/.test(l)) {
@@ -485,8 +583,15 @@ function checkFile(path) {
           seenSlugs,
           errors,
           notes,
+          requiredFields,
         );
-        validateGeneratorComponents(path, generatorRecords[0], errors);
+        records.generator = generatorRecords;
+        notes.push(
+          'legacy ## Generator section — move its record under ## Chosen invariants; any record whose Components link other records composes them',
+        );
+        if (path) validateGeneratorComponents(path, generatorRecords[0], errors);
+        else if (!generatorRecords[0].fields.Components)
+          errors.push(`'${generatorRecords[0].name}': a legacy Generator record needs Components`);
       }
     }
     const realityRecords = parseSection(
@@ -508,6 +613,7 @@ function checkFile(path) {
       seenSlugs,
       errors,
       notes,
+      requiredFields,
     );
     chosenCount = validateRecords(
       chosenRecords,
@@ -516,19 +622,71 @@ function checkFile(path) {
       seenSlugs,
       errors,
       notes,
+      requiredFields,
     );
+    records.reality = realityRecords;
+    records.chosen = chosenRecords;
     if (realityCount + chosenCount < 1)
       errors.push('document: at least one invariant is required');
     else if (realityCount === 0 || chosenCount === 0)
       notes.push('one category is empty — fine while bootstrapping');
-    if (realityCount + chosenCount >= 2 && !generatorBounds) {
-      notes.push(
-        'two or more records need a top ## Generator section — report-only during adoption',
-      );
-    }
-    summary = `${generatorCount} generator, ${realityCount} reality, ${chosenCount} chosen invariants`;
+    summary =
+      `${realityCount} reality, ${chosenCount} chosen invariants` +
+      (generatorCount ? ` (+${generatorCount} in a legacy Generator section)` : '');
   }
-  return { status: errors.length ? 'fail' : 'pass', errors, notes, summary };
+  return {
+    status: errors.length ? 'fail' : 'pass',
+    errors,
+    notes,
+    summary,
+    records,
+  };
+}
+
+// Every record of a canonical contract with its kind: 'reality', 'chosen', or
+// 'legacy-generator' for a record under a legacy ## Generator heading.
+function recordsWithKinds(path) {
+  try {
+    const { lines, active } = readMasked(path);
+    const [sectionBounds] = bounds(lines, active);
+    if (!sectionBounds) return { lines, active, records: [] };
+    const tag = (records, kind) =>
+      records.filter((record) => record.name !== null).map((record) => ({ record, kind }));
+    return {
+      lines,
+      active,
+      records: [
+        ...tag(parseGeneratorRecords(lines, active), 'legacy-generator'),
+        ...tag(parseSection(lines, active, sectionBounds[0], sectionBounds[1]), 'reality'),
+        ...tag(parseSection(lines, active, sectionBounds[2], sectionBounds[3]), 'chosen'),
+      ],
+    };
+  } catch {
+    return { lines: [], active: [], records: [] };
+  }
+}
+
+// The links written inside one field of a record: [{ targetPath, anchor, line }].
+function fieldLinks(path, lines, active, record, label) {
+  const range = record.fieldRanges?.[label];
+  if (!range) return [];
+  const text = lines
+    .map((line, index) =>
+      active[index] && index >= range.start - 1 && index < range.end ? stripInlineCode(line) : '',
+    )
+    .join('\n');
+  const links = [];
+  for (const link of extractLinks(text)) {
+    if (!link.target) continue;
+    const [linkPath, anchor] = decodedLinkTarget(link.target).split('#');
+    if (!anchor) continue;
+    links.push({
+      targetPath: linkPath ? resolve(dirname(path), linkPath) : resolve(path),
+      anchor,
+      line: link.line,
+    });
+  }
+  return links;
 }
 
 function canonicalRecords(path) {
@@ -606,6 +764,7 @@ const COVERAGE_COUNTS = { unreferenced: 0, exempt: 0 };
 const SKIPPED_CHECKOUTS = new Set();
 const SKIPPED_SYMLINKS = new Set();
 const SKIPPED_LARGE = new Set();
+const SKIPPED_GITIGNORED = new Set();
 
 function* walk(dir, root = dir) {
   let entries;
@@ -621,9 +780,13 @@ function* walk(dir, root = dir) {
       SKIPPED_SYMLINKS.add(p);
       continue;
     }
+    const relativePath = relative(root, p).replaceAll('\\', '/');
     if (e.isDirectory()) {
-      const relativeDirectoryPath = relative(root, p).replaceAll('\\', '/');
-      if (EXCLUDED_DIRECTORY_PATHS.has(relativeDirectoryPath)) continue;
+      if (ignoredDirectories(root).has(relativePath)) continue;
+      if (gitIgnoredPaths(root).directories.has(relativePath)) {
+        SKIPPED_GITIGNORED.add(p);
+        continue;
+      }
       // a nested directory with its own .git is another checkout (worktree/vendored
       // clone) — its files shadow this checkout's reality; skip it loudly
       if (existsSync(join(p, '.git'))) {
@@ -631,7 +794,13 @@ function* walk(dir, root = dir) {
         continue;
       }
       yield* walk(p, root);
-    } else if (e.isFile()) yield p;
+    } else if (e.isFile()) {
+      if (gitIgnoredPaths(root).files.has(relativePath)) {
+        SKIPPED_GITIGNORED.add(p);
+        continue;
+      }
+      yield p;
+    }
   }
 }
 
@@ -649,9 +818,15 @@ function reportSkipsAndNearMisses(root) {
       `note: file exceeds ${MAX_SCAN_BYTES} bytes — not scanned for annotations: ${relative(root, p)}`,
     );
   }
+  if (SKIPPED_GITIGNORED.size > 0) {
+    console.log(
+      `note: ${SKIPPED_GITIGNORED.size} gitignored path(s) not scanned — no clone contains them`,
+    );
+  }
   SKIPPED_CHECKOUTS.clear();
   SKIPPED_SYMLINKS.clear();
   SKIPPED_LARGE.clear();
+  SKIPPED_GITIGNORED.clear();
   for (const p of walk(root)) {
     const b = basename(p);
     if (
@@ -677,6 +852,7 @@ function reportSkipsAndNearMisses(root) {
   SKIPPED_CHECKOUTS.clear();
   SKIPPED_SYMLINKS.clear();
   SKIPPED_LARGE.clear();
+  SKIPPED_GITIGNORED.clear();
 }
 
 function discover(root) {
@@ -875,30 +1051,38 @@ function resolveContractRecordLink(
   return { target, anchor, key: `${target}#${anchor}` };
 }
 
+// Links in any markdown file are validated. In a contract, a link inside a record's
+// Components field also says that record COMPOSES the linked one.
 function checkGenerator(root, path, slugsByFile, globalSlugs, problems) {
   let text;
-  let componentLineStart = null;
-  let componentLineEnd = null;
+  const componentRanges = []; // { start, end, composer }
   try {
     const { lines, active } = readMasked(path);
     text = lines
       .map((l, i) => (active[i] ? stripInlineCode(l) : ''))
       .join('\n');
     if (isCanonicalShaped(path)) {
-      const generatorRecords = parseGeneratorRecords(lines, active);
-      if (generatorRecords.length === 1) {
-        const componentRange = generatorRecords[0].fieldRanges.Components;
-        if (componentRange) {
-          componentLineStart = componentRange.start;
-          componentLineEnd = componentRange.end;
-        }
+      const [sectionBounds] = bounds(lines, active);
+      const records = [
+        ...parseGeneratorRecords(lines, active),
+        ...(sectionBounds
+          ? [
+              ...parseSection(lines, active, sectionBounds[0], sectionBounds[1]),
+              ...parseSection(lines, active, sectionBounds[2], sectionBounds[3]),
+            ]
+          : []),
+      ];
+      for (const record of records) {
+        const range = record.fieldRanges?.Components;
+        if (range) componentRanges.push({ ...range, composer: record.name });
       }
     }
   } catch {
-    return { resolved: 0, referenced: new Set() };
+    return { resolved: 0, referenced: new Set(), composers: new Set() };
   }
   let resolved = 0;
   const referenced = new Set();
+  const composers = new Set(); // `${path} ${slug}` of records whose Components link a record
   for (const link of extractLinks(text)) {
     const where = `${relative(root, path)}:${link.line}`;
     if (link.target === null) {
@@ -914,10 +1098,10 @@ function checkGenerator(root, path, slugsByFile, globalSlugs, problems) {
     }
     const decoded = decodedLinkTarget(link.target);
     const [decodedPath] = decoded.split('#');
-    const isComponentLink =
-      componentLineStart !== null &&
-      link.line >= componentLineStart &&
-      link.line <= componentLineEnd;
+    const componentRange = componentRanges.find(
+      (range) => link.line >= range.start && link.line <= range.end,
+    );
+    const isComponentLink = componentRange !== undefined;
     if (
       decodedPath.endsWith(GENERATOR_SUFFIX) ||
       decodedPath.endsWith(LEGACY_LATTICE_SUFFIX)
@@ -943,9 +1127,10 @@ function checkGenerator(root, path, slugsByFile, globalSlugs, problems) {
     resolved++;
     if (isComponentLink) {
       referenced.add(`${resolvedLink.target} ${resolvedLink.anchor}`);
+      composers.add(`${resolve(path)} ${invariantHeadingSlug(componentRange.composer)}`);
     }
   }
-  return { resolved, referenced };
+  return { resolved, referenced, composers };
 }
 
 function checkGeneratorCompanionProse(root, path, problems) {
@@ -955,12 +1140,12 @@ function checkGeneratorCompanionProse(root, path, problems) {
     for (let index = 0; index < lines.length; index++) {
       if (!active[index]) continue;
       if (
-        /^\s*\*\*(Invariant|Scope|Mechanism|Impossible if true|Verification|Status|Last refined):\*\*/.test(
+        /^\s*\*\*(Invariant|Scope|Mechanism|Rules out|Impossible if true|Verification|Status|Last refined):\*\*/.test(
           lines[index],
         )
       ) {
         problems.push(
-          `${relative(root, path)}:${index + 1}: generator companions are prose-only; move invariant records to the contract Generator section`,
+          `${relative(root, path)}:${index + 1}: generator companions are prose-only (and retired); move invariant records to the contract Generator section`,
         );
       }
     }
@@ -1084,6 +1269,15 @@ function parseTestProofAnnotations(lines, headerEndLine, where, problems) {
       });
       continue;
     }
+    const localNameMatch = DOMAIN_INVARIANT_TRIPWIRE_RE.exec(line);
+    if (localNameMatch) {
+      pending.push({
+        type: 'local',
+        name: localNameMatch[1].trim(),
+        line: index + 1,
+      });
+      continue;
+    }
     const impossibleMatch = IMPOSSIBLE_IF_TRUE_LINE_RE.exec(line);
     if (impossibleMatch) {
       pending.push({
@@ -1094,9 +1288,9 @@ function parseTestProofAnnotations(lines, headerEndLine, where, problems) {
       });
       continue;
     }
-    if (line.includes('impossible-if-true:')) {
+    if (RULES_OUT_KEYWORD_RE.test(line)) {
       problems.push(
-        `${where}:${index + 1}: malformed impossible-if-true proof annotation`,
+        `${where}:${index + 1}: malformed rules-out proof annotation`,
       );
       continue;
     }
@@ -1125,6 +1319,137 @@ function parseTestProofAnnotations(lines, headerEndLine, where, problems) {
   return proofs;
 }
 
+
+// A test header is the contract grammar in the file's first block comment:
+// `## Reality-based invariants` / `## Chosen invariants` sections of full records (an
+// optional `## Generator` composition too). Evidence and Verification are the tests
+// beneath it. The legacy two-register form (=== GENERATOR === … === GENERATOR-DESCRIBED ===)
+// still passes, with a note.
+const HEADER_REQUIRED = REQUIRED.filter(
+  (label) => label !== 'Evidence' && label !== 'Verification',
+);
+const HEADER_SECTION_RE = /^[ \t]*## (?:Reality-based|Chosen|Designed) invariants[ \t]*$/m;
+
+function headerBlock(text, anchorIndex, where, problems) {
+  const blockStart = text.lastIndexOf('/*', anchorIndex);
+  const blockEnd = text.indexOf('*/', anchorIndex);
+  if (blockStart < 0 || blockEnd < 0) {
+    problems.push(where + ': the invariant header must live inside one block comment');
+    return null;
+  }
+  if (text.slice(0, blockStart).trim()) {
+    problems.push(
+      where + ': the invariant header must be the first content; imports follow it',
+    );
+  }
+  return { blockStart, blockEnd };
+}
+
+// test path -> its header records; filled by checkRefs before the walk so that a record
+// one file holds can be recognised when a SECOND file depends on it (promotion is due)
+let LOCAL_RECORD_HOMES = new Map(); // record name -> [test paths]
+
+function headerSectionLines(header) {
+  const lines = header
+    .slice(2, -2)
+    .split('\n')
+    .map((line) => line.replace(/^[ \t]+/, ''));
+  const active = [];
+  let fenced = false;
+  for (const line of lines) {
+    if (/^(```|~~~)/.test(line)) {
+      fenced = !fenced;
+      active.push(false);
+      continue;
+    }
+    active.push(!fenced);
+  }
+  // a header may omit a section it has no records for (contracts keep both headings):
+  // supply the missing heading so the contract parser sees its usual shape
+  const has = (heading) =>
+    lines.some((line, index) => active[index] && line.trim() === heading);
+  if (!has(CHOSEN) && !has(CHOSEN_ALIAS)) {
+    lines.push(CHOSEN);
+    active.push(true);
+  }
+  if (!has(REALITY)) {
+    const chosenIndex = lines.findIndex(
+      (line, index) => active[index] && (line.trim() === CHOSEN || line.trim() === CHOSEN_ALIAS),
+    );
+    lines.splice(chosenIndex, 0, REALITY);
+    active.splice(chosenIndex, 0, true);
+  }
+  return { lines, active };
+}
+
+// the record names a section-form test header holds (empty for legacy or headerless files)
+function headerRecordNames(text) {
+  if (text.includes(GENERATOR_SENTINEL)) return [];
+  const match = HEADER_SECTION_RE.exec(text);
+  if (!match) return [];
+  const blockStart = text.lastIndexOf('/*', match.index);
+  const blockEnd = text.indexOf('*/', match.index);
+  if (blockStart < 0 || blockEnd < 0) return [];
+  const { lines, active } = headerSectionLines(text.slice(blockStart, blockEnd + 2));
+  const { records } = validateContractLines(null, lines, active, HEADER_REQUIRED);
+  return [...records.generator, ...records.reality, ...records.chosen]
+    .filter((record) => record.name !== null)
+    .map((record) => record.name);
+}
+
+function promotionHint(name, dependentPath, root) {
+  const homes = (LOCAL_RECORD_HOMES.get(name) ?? []).filter(
+    (home) => home !== dependentPath,
+  );
+  if (!homes.length) return '';
+  return (
+    ` — '${name}' is local to ${homes.map((home) => relative(root, home)).join(', ')}; a second` +
+    ` file depending on it means it is time to promote it: move the record into a contract and` +
+    ` annotate // invariant: ${name} (<contract path>)`
+  );
+}
+
+// a contract record's Rules out claims, bullet by bullet (wrapped lines joined)
+function contractRecordImpossibilities(contractPath, name) {
+  try {
+    const { lines, active } = readMasked(contractPath);
+    const [sectionBounds] = bounds(lines, active);
+    if (!sectionBounds) return [];
+    const records = [
+      ...parseGeneratorRecords(lines, active),
+      ...parseSection(lines, active, sectionBounds[0], sectionBounds[1]),
+      ...parseSection(lines, active, sectionBounds[2], sectionBounds[3]),
+    ];
+    const record = records.find((candidate) => candidate.name === name);
+    return record ? fieldClaims(lines, active, record, 'Rules out') : [];
+  } catch {
+    return [];
+  }
+}
+
+// a field's bullets, wrapped lines joined with single spaces (rewrapping never changes a
+// claim); a field with no bullets is one claim
+function fieldClaims(lines, active, record, label) {
+  const range = record.fieldRanges?.[label];
+  if (!range) return [];
+  const bullets = [];
+  let current = null;
+  for (let index = range.start - 1; index < range.end; index++) {
+    if (!active[index]) continue;
+    let line = lines[index];
+    if (index === range.start - 1) line = line.replace(FIELD_SHAPE_RE, '');
+    line = line.trim();
+    if (!line) {
+      current = null;
+      continue;
+    }
+    if (line.startsWith('- ')) current = bullets.push(line.slice(2).trim()) - 1;
+    else if (current !== null) bullets[current] += ' ' + line;
+  }
+  if (bullets.length) return bullets;
+  return record.fields[label] ? [record.fields[label]] : [];
+}
+
 function parseTestGeneratorHeader(
   root,
   path,
@@ -1133,101 +1458,150 @@ function parseTestGeneratorHeader(
   slugsByFile,
   globalSlugs,
 ) {
-  const sentinelIndex = text.indexOf(GENERATOR_SENTINEL);
-  if (sentinelIndex < 0) return null;
   const where = relative(root, path);
-  if (text.indexOf(GENERATOR_SENTINEL, sentinelIndex + 1) >= 0) {
+  const legacyIndex = text.indexOf(GENERATOR_SENTINEL);
+  const sectionMatch = HEADER_SECTION_RE.exec(text);
+  if (legacyIndex < 0 && !sectionMatch) return null;
+  if (legacyIndex >= 0 && text.indexOf(GENERATOR_SENTINEL, legacyIndex + 1) >= 0) {
     problems.push(where + ': more than one generator header sentinel');
     return null;
   }
-  const blockStart = text.lastIndexOf('/*', sentinelIndex);
-  const blockEnd = text.indexOf('*/', sentinelIndex);
-  if (blockStart < 0 || blockEnd < 0) {
-    problems.push(
-      where + ': generator sentinel must live inside one block comment',
-    );
-    return null;
-  }
-  if (text.slice(0, blockStart).trim()) {
-    problems.push(
-      where + ': generator header must be the first content; imports follow it',
-    );
-  }
-
-  const header = text.slice(blockStart, blockEnd + 2);
-  const generatorHeadingIndex = header.indexOf(GENERATOR_SENTINEL);
-  const describedHeadingIndex = header.indexOf(GENERATOR_DESCRIBED_SENTINEL);
-  if (describedHeadingIndex < 0) {
-    problems.push(
-      where + ': generator header needs === GENERATOR-DESCRIBED ===',
-    );
-    return null;
-  }
-  if (describedHeadingIndex < generatorHeadingIndex) {
-    problems.push(
-      where + ': === GENERATOR-DESCRIBED === must follow === GENERATOR ===',
-    );
-    return null;
-  }
-  const formalBody = header.slice(
-    generatorHeadingIndex + GENERATOR_SENTINEL.length,
-    describedHeadingIndex,
+  const block = headerBlock(
+    text,
+    legacyIndex >= 0 ? legacyIndex : sectionMatch.index,
+    where,
+    problems,
   );
-  if (!/^\s*Goal:\s*\S/m.test(formalBody)) {
-    problems.push(where + ': formal generator register needs Goal');
-  }
+  if (!block) return null;
+  const { blockStart, blockEnd } = block;
+  const header = text.slice(blockStart, blockEnd + 2);
   const sourcePath = path.replace(/\.test\.ts$/, '.ts');
   let sourceText = '';
   if (!existsSync(sourcePath)) {
     problems.push(
-      where + ': generator header needs sibling source ' + basename(sourcePath),
+      where + ': invariant header needs sibling source ' + basename(sourcePath),
     );
   } else {
     sourceText = readText(sourcePath);
   }
-  const domainClaims = new Map();
-  const domainSymbols = new Set();
-  const formalLines = formalBody.split('\n');
-  for (let index = 0; index < formalLines.length; index++) {
-    const line = formalLines[index];
-    const match = DOMAIN_INVARIANT_LINE_RE.exec(line);
-    if (match) {
-      const symbolName = match[1].trim();
-      const claim = match[2].trim();
-      const key = `${symbolName} — ${claim}`;
-      domainClaims.set(key, { symbolName, claim });
-      domainSymbols.add(symbolName);
-      if (sourceText && !declaredSymbolExists(sourceText, symbolName)) {
-        problems.push(
-          where +
-            ": domain-invariant symbol '" +
-            symbolName +
-            "' is not declared in sibling " +
-            basename(sourcePath),
-        );
-      }
-      continue;
-    }
-    if (line.includes('domain-invariant:')) {
+
+  // claims the tests must prove
+  const domainClaims = new Map(); // legacy: `${symbol} — ${claim}`
+  const domainSymbols = new Set(); // legacy symbols
+  const localNames = new Set(); // record names
+  const compositionNames = new Set(); // records whose Components link records: enforced through their parts
+  const impossibleClaims = new Map(); // `${owner} — ${text}` -> text
+  const impossibleTexts = new Set(); // legacy: owner-free texts
+  let claimLinkText = '';
+  const isLegacy = legacyIndex >= 0;
+
+  if (isLegacy) {
+    LEGACY_TEST_HEADERS.add(where);
+    const generatorHeadingIndex = header.indexOf(GENERATOR_SENTINEL);
+    const describedHeadingIndex = header.indexOf(GENERATOR_DESCRIBED_SENTINEL);
+    if (describedHeadingIndex < 0) {
       problems.push(
-        where + ': malformed domain-invariant line in formal register',
+        where +
+          ': legacy generator header needs === GENERATOR-DESCRIBED === — or write the header as' +
+          ' contract sections (## Reality-based invariants / ## Chosen invariants) with no marker',
       );
+      return null;
     }
-  }
-  const impossibleClaims = new Set();
-  for (const match of formalBody.matchAll(
-    /^\s*Impossible if true:\s*(.+\S)\s*$/gm,
-  )) {
-    impossibleClaims.add(match[1].trim());
-  }
-  if (impossibleClaims.size === 0) {
-    problems.push(
-      where + ': formal generator register needs Impossible if true',
+    if (describedHeadingIndex < generatorHeadingIndex) {
+      problems.push(
+        where + ': === GENERATOR-DESCRIBED === must follow === GENERATOR ===',
+      );
+      return null;
+    }
+    const formalBody = header.slice(
+      generatorHeadingIndex + GENERATOR_SENTINEL.length,
+      describedHeadingIndex,
     );
+    if (!/^\s*Goal:\s*\S/m.test(formalBody)) {
+      problems.push(where + ': formal generator register needs Goal');
+    }
+    for (const line of formalBody.split('\n')) {
+      const match = DOMAIN_INVARIANT_LINE_RE.exec(line);
+      if (match) {
+        const symbolName = match[1].trim();
+        const claim = match[2].trim();
+        domainClaims.set(`${symbolName} — ${claim}`, { symbolName, claim });
+        domainSymbols.add(symbolName);
+        if (sourceText && !declaredSymbolExists(sourceText, symbolName)) {
+          problems.push(
+            where +
+              ": local-invariant symbol '" +
+              symbolName +
+              "' is not declared in sibling " +
+              basename(sourcePath),
+          );
+        }
+        continue;
+      }
+      if (LOCAL_INVARIANT_KEYWORD_RE.test(line)) {
+        problems.push(where + ': malformed local-invariant line in formal register');
+      }
+    }
+    for (const match of formalBody.matchAll(/^\s*Impossible if true:\s*(.+\S)\s*$/gm)) {
+      impossibleTexts.add(match[1].trim());
+    }
+    if (impossibleTexts.size === 0) {
+      problems.push(where + ': formal generator register needs Impossible if true');
+    }
+    claimLinkText = formalBody;
+  } else {
+    // contract sections inside the comment: the same grammar, the same validator
+    const { lines, active } = headerSectionLines(header);
+    const result = validateContractLines(null, lines, active, HEADER_REQUIRED);
+    for (const error of result.errors) problems.push(`${where}: ${error}`);
+    const records = [
+      ...result.records.generator,
+      ...result.records.reality,
+      ...result.records.chosen,
+    ].filter((record) => record.name !== null);
+    const localSlugs = new Set(records.map((record) => invariantHeadingSlug(record.name)));
+    for (const record of records) {
+      const range = record.fieldRanges?.Components;
+      if (!range) continue;
+      const componentText = lines.slice(range.start - 1, range.end).join('\n');
+      if (extractLinks(componentText).length) compositionNames.add(record.name);
+    }
+    for (const record of records) {
+      localNames.add(record.name);
+      for (const claim of fieldClaims(lines, active, record, 'Rules out')) {
+        impossibleClaims.set(`${record.name} — ${claim}`, claim);
+      }
+      const componentLines = [];
+      const range = record.fieldRanges?.Components;
+      if (range) {
+        for (let index = range.start - 1; index < range.end; index++) {
+          if (active[index]) componentLines.push(lines[index]);
+        }
+      }
+      for (const link of extractLinks(componentLines.join('\n'))) {
+        if (!link.target) {
+          problems.push(
+            `${where}: '${record.name}' component reference has no definition: [${link.key}]`,
+          );
+          continue;
+        }
+        const target = decodedLinkTarget(link.target);
+        if (target.startsWith('#')) {
+          if (!localSlugs.has(target.slice(1))) {
+            problems.push(
+              `${where}: '${record.name}' component ${target} names no record in this header`,
+            );
+          }
+          continue;
+        }
+        claimLinkText += `[${link.text}](${link.target})\n`;
+      }
+    }
   }
 
   const headerContractClaims = new Set();
-  for (const link of extractLinks(formalBody)) {
+  const linkedContractBySlug = new Map(); // anchor slug -> contract path
+  for (const link of extractLinks(claimLinkText)) {
     const resolvedLink = resolveContractRecordLink(
       root,
       path,
@@ -1236,7 +1610,10 @@ function parseTestGeneratorHeader(
       globalSlugs,
       problems,
     );
-    if (resolvedLink) headerContractClaims.add(resolvedLink.key);
+    if (resolvedLink) {
+      headerContractClaims.add(resolvedLink.key);
+      linkedContractBySlug.set(resolvedLink.anchor, resolvedLink.target);
+    }
   }
 
   const headerEndLine = text.slice(0, blockEnd + 2).split('\n').length;
@@ -1246,15 +1623,31 @@ function parseTestGeneratorHeader(
     where,
     problems,
   );
-  const provedDomainClaims = new Set();
-  const provedImpossibleClaims = new Set();
-  const provedContractClaims = new Set();
+  const proved = new Set();
   for (const proof of proofs) {
+    if (proof.type === 'local') {
+      if (localNames.has(proof.name)) proved.add(`local ${proof.name}`);
+      else if (isLegacy && domainSymbols.has(proof.name)) {
+        problems.push(
+          `${where}:${proof.line}: legacy headers prove a symbol with its claim: // local-invariant: ${proof.name} — <claim>`,
+        );
+      } else {
+        problems.push(
+          `${where}:${proof.line}: annotated test names no record in the header: ${proof.name}` +
+            promotionHint(proof.name, path, root),
+        );
+      }
+      continue;
+    }
     if (proof.type === 'domain') {
       const key = `${proof.symbol} — ${proof.claim}`;
-      if (domainClaims.has(key)) {
-        provedDomainClaims.add(key);
-      } else if (impossibleClaims.has(proof.claim)) {
+      if (!isLegacy) {
+        problems.push(
+          `${where}:${proof.line}: '<symbol> — <claim>' annotations belong to the legacy header form; name the record: // local-invariant: <record name>`,
+        );
+      } else if (domainClaims.has(key)) {
+        proved.add(`domain ${key}`);
+      } else if (impossibleTexts.has(proof.claim)) {
         problems.push(
           `${where}:${proof.line}: impossibility labeled as an invariant: ${key}`,
         );
@@ -1267,55 +1660,78 @@ function parseTestGeneratorHeader(
     }
     if (proof.type === 'impossible') {
       const key = `${proof.symbol} — ${proof.claim}`;
-      if (impossibleClaims.has(proof.claim)) {
-        provedImpossibleClaims.add(proof.claim);
-        if (!domainSymbols.has(proof.symbol)) {
+      if (isLegacy) {
+        if (impossibleTexts.has(proof.claim)) {
+          proved.add(`impossible ${proof.claim}`);
+          if (!domainSymbols.has(proof.symbol)) {
+            problems.push(
+              `${where}:${proof.line}: impossible proof symbol '${proof.symbol}' is absent from the header`,
+            );
+          }
+        } else if (domainClaims.has(key)) {
           problems.push(
-            `${where}:${proof.line}: impossible proof symbol '${proof.symbol}' is absent from the header`,
+            `${where}:${proof.line}: invariant labeled as an impossibility: ${key}`,
+          );
+        } else {
+          problems.push(
+            `${where}:${proof.line}: annotated impossibility is absent from the generator header: ${key}`,
           );
         }
-      } else if (domainClaims.has(key)) {
-        problems.push(
-          `${where}:${proof.line}: invariant labeled as an impossibility: ${key}`,
-        );
+      } else if (impossibleClaims.has(key)) {
+        proved.add(`impossible ${key}`);
+      } else if (linkedContractBySlug.has(invariantHeadingSlug(proof.symbol))) {
+        // a promoted (or any linked) contract record: its negative tests keep their form
+        const contractPath = linkedContractBySlug.get(invariantHeadingSlug(proof.symbol));
+        if (!contractRecordImpossibilities(contractPath, proof.symbol).includes(proof.claim)) {
+          problems.push(
+            `${where}:${proof.line}: annotated impossibility is absent from ${relative(root, contractPath)}: ${key}`,
+          );
+        }
       } else {
         problems.push(
-          `${where}:${proof.line}: annotated impossibility is absent from the generator header: ${key}`,
+          `${where}:${proof.line}: annotated impossibility is absent from the header: ${key}` +
+            promotionHint(proof.symbol, path, root),
         );
       }
       continue;
     }
     const key = resolveTestInvariantAnnotation(root, path, proof);
     if (key && headerContractClaims.has(key)) {
-      provedContractClaims.add(key);
+      proved.add(`contract ${key}`);
     } else {
       problems.push(
         `${where}:${proof.line}: annotated test claim is absent from the generator header: ${proof.name}`,
       );
     }
   }
-  for (const claim of domainClaims.keys()) {
-    if (!provedDomainClaims.has(claim)) {
-      problems.push(
-        `${where}: header domain-invariant has no annotated test: ${claim}`,
-      );
+  for (const name of localNames) {
+    if (!proved.has(`local ${name}`)) {
+      problems.push(`${where}: header record has no annotated test: ${name}`);
     }
   }
-  for (const claim of impossibleClaims) {
-    if (!provedImpossibleClaims.has(claim)) {
-      problems.push(
-        `${where}: Impossible if true has no annotated negative test: ${claim}`,
-      );
+  for (const claim of domainClaims.keys()) {
+    if (!proved.has(`domain ${claim}`)) {
+      problems.push(`${where}: header local-invariant has no annotated test: ${claim}`);
+    }
+  }
+  for (const key of impossibleClaims.keys()) {
+    if (!proved.has(`impossible ${key}`)) {
+      problems.push(`${where}: Rules out has no annotated negative test: ${key}`);
+    }
+  }
+  for (const claim of impossibleTexts) {
+    if (!proved.has(`impossible ${claim}`)) {
+      problems.push(`${where}: Rules out has no annotated negative test: ${claim}`);
     }
   }
   for (const claim of headerContractClaims) {
-    if (!provedContractClaims.has(claim)) {
+    if (!proved.has(`contract ${claim}`)) {
       problems.push(
         `${where}: header contract-record pointer has no annotated test: ${claim.slice(claim.indexOf('#') + 1)}`,
       );
     }
   }
-  return { domainSymbols };
+  return { domainSymbols, localNames, compositionNames, isLegacy };
 }
 
 function checkTypeScriptGenerator(
@@ -1367,19 +1783,35 @@ function checkTypeScriptGenerator(
     );
   }
   const lines = text.split('\n');
+  const tripwired = new Set();
   for (let index = 0; index < lines.length; index++) {
-    if (!lines[index].includes('domain-invariant:')) continue;
+    if (!LOCAL_INVARIANT_KEYWORD_RE.test(lines[index])) continue;
     const tripwire = DOMAIN_INVARIANT_TRIPWIRE_RE.exec(lines[index]);
     if (!tripwire) {
       problems.push(
-        `${where}:${index + 1}: source domain-invariant tripwires carry only the symbol`,
+        `${where}:${index + 1}: source local-invariant tripwires carry only the record name (or legacy symbol)`,
       );
       continue;
     }
-    const symbolName = tripwire[1].trim();
-    if (!siblingHeader?.domainSymbols.has(symbolName)) {
+    const name = tripwire[1].trim();
+    tripwired.add(name);
+    if (
+      !siblingHeader?.localNames.has(name) &&
+      !siblingHeader?.domainSymbols.has(name)
+    ) {
       problems.push(
-        `${where}:${index + 1}: source domain-invariant '${symbolName}' has no header claim in ${basename(siblingTestPath)}`,
+        `${where}:${index + 1}: source local-invariant '${name}' has no header claim in ${basename(siblingTestPath)}` +
+          promotionHint(name, siblingTestPath, root),
+      );
+    }
+  }
+  if (siblingHeader && !siblingHeader.isLegacy) {
+    const untripwired = [...siblingHeader.localNames].filter(
+      (name) => !tripwired.has(name) && !siblingHeader.compositionNames.has(name),
+    );
+    if (untripwired.length) {
+      console.log(
+        `note: ${where}: header records with no tripwire at an enforcement point: ${untripwired.join(' · ')}`,
       );
     }
   }
@@ -1436,11 +1868,37 @@ function checkRefs(root) {
   }
   const byRel = new Map([...contracts].map(([p, n]) => [relative(root, p), n]));
   const orphans = [];
+  // local records by home, so a second dependent can be told to promote; a record that
+  // lives in a header AND a contract is a promotion left half done
+  LOCAL_RECORD_HOMES = new Map();
+  for (const p of walk(root)) {
+    if (!p.endsWith('.test.ts')) continue;
+    let text;
+    try {
+      if (statSync(p).size > MAX_SCAN_BYTES) continue;
+      text = readText(p);
+    } catch {
+      continue;
+    }
+    for (const name of headerRecordNames(text)) {
+      const homes = LOCAL_RECORD_HOMES.get(name) ?? [];
+      homes.push(p);
+      LOCAL_RECORD_HOMES.set(name, homes);
+      for (const target of recordsByName.get(name) ?? []) {
+        orphans.push(
+          `${relative(root, p)}: '${name}' lives in two homes — this header and ` +
+            `${relative(root, target.path)}; finish the promotion: delete the header record, ` +
+            `link the contract record from Components, and annotate its tests ` +
+            `// invariant: ${name} (${relative(root, target.path)})`,
+        );
+      }
+    }
+  }
   const referenced = new Set(); // `${resolvedContractPath} ${name-or-slug}`
   let valid = 0;
   for (const p of walk(root)) {
     if (p.endsWith('.invariants.md')) continue;
-    if (basename(p) === 'check_invariants.test.mjs') continue; // own spec's fixtures aren't annotations
+    if (basename(p) === 'ibr-code-invariants-check.test.mjs') continue; // own spec's fixtures aren't annotations
     if (basename(p) === 'SKILL.md') continue; // skill docs carry instructional examples, not annotations
     let text;
     try {
@@ -1544,6 +2002,7 @@ function checkRefs(root) {
   // generator reference validation (anchors are identity)
   const generatorProblems = [];
   const generatorReferenced = new Set();
+  const generatorComposers = new Set();
   let generatorResolved = 0;
   let italicRecordCitations = 0;
   for (const p of walk(root)) {
@@ -1552,7 +2011,13 @@ function checkRefs(root) {
     // companion files additionally get sibling coverage reporting
     if (!p.endsWith('.md')) continue;
     const b = basename(p);
-    if (b === 'SKILL.md' || b === 'check_invariants.test.mjs') continue;
+    if (b === 'SKILL.md' || b === 'ibr-code-invariants-check.test.mjs') continue;
+    // contracts are always read in full; any other markdown past the cap is skipped
+    // loudly (multi-megabyte transcripts and logs are not documentation)
+    if (!p.endsWith('.invariants.md') && statSync(p).size > MAX_SCAN_BYTES) {
+      SKIPPED_LARGE.add(p);
+      continue;
+    }
     if (p.endsWith('.invariants.md')) {
       italicRecordCitations += checkItalicRecordCitations(
         root,
@@ -1561,10 +2026,10 @@ function checkRefs(root) {
         generatorProblems,
       );
     }
-    if (p.endsWith(LEGACY_LATTICE_SUFFIX)) {
+    if (p.endsWith(GENERATOR_SUFFIX) || p.endsWith(LEGACY_LATTICE_SUFFIX)) {
       console.log(
-        `note: legacy reflective companion accepted: ${relative(root, p)}; ` +
-          `engineering repositories use *${GENERATOR_SUFFIX}`,
+        `note: retired generator companion: ${relative(root, p)}; ` +
+          `fold what it carries into the records' fields`,
       );
     }
     checkGeneratorCompanionProse(root, p, generatorProblems);
@@ -1579,19 +2044,63 @@ function checkRefs(root) {
     for (const reference of generatorResult.referenced) {
       generatorReferenced.add(reference);
     }
+    for (const composer of generatorResult.composers) generatorComposers.add(composer);
   }
   orphans.push(...generatorProblems);
 
+  // Stands on: a reality record never stands on a choice (the dependency rule). Where a
+  // contract has started recording Stands on, name the chosen records that record none.
+  const kindsByFile = new Map();
+  const kindOf = (path, anchor) => {
+    if (!kindsByFile.has(path)) {
+      const kinds = new Map();
+      for (const { record, kind } of recordsWithKinds(path).records) {
+        kinds.set(invariantHeadingSlug(record.name), kind);
+      }
+      kindsByFile.set(path, kinds);
+    }
+    return kindsByFile.get(path).get(anchor) ?? null;
+  };
+  for (const [p] of domainRecordsByFile) {
+    const { lines, active, records } = recordsWithKinds(p);
+    const standing = records.filter(({ record }) => record.fieldRanges?.['Stands on']);
+    for (const { record, kind } of standing) {
+      for (const link of fieldLinks(p, lines, active, record, 'Stands on')) {
+        const targetKind = kindOf(link.targetPath, link.anchor);
+        if (kind === 'reality' && targetKind && targetKind !== 'reality') {
+          orphans.push(
+            `${relative(root, p)}: reality record '${record.name}' stands on chosen record '#${link.anchor}' — reality never stands on a choice`,
+          );
+        }
+      }
+    }
+    if (standing.length === 0) continue;
+    const unstood = records
+      .filter(({ record, kind }) => kind === 'chosen' && !record.fieldRanges?.['Stands on'])
+      .map(({ record }) => record.name);
+    if (unstood.length) {
+      console.log(
+        `note: stands-on ${relative(root, p)}: chosen records that stand on no record: ${unstood.join(' · ')}`,
+      );
+    }
+  }
+
+  // composition coverage: in a contract where some record composes others, name the
+  // records that nothing composes (the composers themselves are the roots, not gaps)
   for (const [p, recs] of domainRecordsByFile) {
-    const unclaimed = recs
+    const key = (record) => `${resolve(p)} ${invariantHeadingSlug(record.name)}`;
+    const filePrefix = `${resolve(p)} `;
+    if (![...generatorComposers].some((composer) => composer.startsWith(filePrefix))) continue;
+    const uncomposed = recs
       .filter(
         (record) =>
-          !generatorReferenced.has(`${p} ${invariantHeadingSlug(record.name)}`),
+          !generatorReferenced.has(`${p} ${invariantHeadingSlug(record.name)}`) &&
+          !generatorComposers.has(key(record)),
       )
       .map((record) => record.name);
-    if (unclaimed.length) {
+    if (uncomposed.length) {
       console.log(
-        `generator-coverage ${relative(root, p)}: no mechanism claims: ${unclaimed.join(' · ')}`,
+        `composition ${relative(root, p)}: no record composes: ${uncomposed.join(' · ')}`,
       );
     }
   }
@@ -1637,8 +2146,15 @@ function checkRefs(root) {
       }
     }
   }
+  if (LEGACY_TEST_HEADERS.size > 0) {
+    console.log(
+      `note: ${LEGACY_TEST_HEADERS.size} test header(s) in the legacy Goal + GENERATOR-DESCRIBED form — ` +
+        `still checked; contract sections (## Reality-based invariants / ## Chosen invariants of full records) are canonical`,
+    );
+    LEGACY_TEST_HEADERS.clear();
+  }
   console.log(
-    `${valid} annotation(s) resolved, ${generatorResolved} generator link(s) resolved, ` +
+    `${valid} annotation(s) resolved, ${generatorResolved} record link(s) resolved, ` +
       `${italicRecordCitations} italic record citation(s), ${orphans.length} problem(s)`,
   );
   return {
@@ -1685,34 +2201,37 @@ function gitToplevel() {
   }
 }
 
-const HELP = `check_invariants.mjs v${VERSION} — validate *.invariants.md contracts and their code annotations
-Single-file Node >=18, zero dependencies. Lives inside the invariants skill folder;
+const HELP = `ibr-code-invariants-check.mjs v${VERSION} — validate *.invariants.md contracts and their code annotations
+Single-file Node >=18, zero dependencies. Lives inside the ibr-code-invariants skill folder;
 invoke it by its real path from anywhere inside the target checkout.
 
-Taxonomy: *.invariants.md is the subsystem contract: gears plus one full generator record.
-*.generator.md is prose-only context. Test-file generator headers bind local claims to tests.
+Taxonomy: every invariant generates; one contract grammar at two levels. *.invariants.md holds
+the architectural level. A test file's first block comment holds the implementation level: the
+same sections and full records (Evidence and Verification are the tests beneath), proved by
+// local-invariant: <name>, // rules-out: <name> — <text> and // invariant: annotated
+tests. Every chosen record carries a Goal; reality records never do. *.generator.md is retired.
 
 usage:
-  node <path-to>/check_invariants.mjs PATH              validate one contract
-  node <path-to>/check_invariants.mjs --all [ROOT]      validate every *.invariants.md
+  node <path-to>/ibr-code-invariants-check.mjs PATH              validate one contract
+  node <path-to>/ibr-code-invariants-check.mjs --all [ROOT]      validate every *.invariants.md
                                                         (exit 2 if none exist under ROOT)
-  node <path-to>/check_invariants.mjs --refs [ROOT]     verify code annotations + generators
+  node <path-to>/ibr-code-invariants-check.mjs --refs [ROOT]     verify code annotations + generators
                                                         test headers, source tripwires, links,
                                                         italic record citations, and
                                                         record-membership coverage
-  node <path-to>/check_invariants.mjs --refs-for '<Name>' [ROOT]
+  node <path-to>/ibr-code-invariants-check.mjs --refs-for '<Name>' [ROOT]
                                                         every code annotation + contract declaring
                                                         ONE named invariant (retirement-sweep primitive)
   --strict     with --all: non-canonical (local-format) files fail instead of skip
-  --score      emit mechanical score components as JSON (last line) — facts only; the
-               scoring rubric lives in the skill's references/score.md
+  --score      emit mechanical facts about the contract layer as JSON (last line) — counts
+               only; scoring lives in the ibr-code-review skill
   --version    print version (for diagnosing checker/schema skew between copies)
   --help       this text
 
 ROOT defaults to the git toplevel of the current directory (printed as "root ...");
 pass it explicitly when outside a git checkout. Exit: 0 ok, 1 findings, 2 usage/IO.
 CRLF/BOM normalized; fenced code blocks and HTML comments are inert; nested checkouts,
-symlinks, files over 2MB, and scripts/retired-smokes are skipped.`;
+symlinks, files over 2MB, and directories listed in .invariantsignore are skipped.`;
 
 const KNOWN_FLAGS = new Set([
   '--all',
@@ -1743,7 +2262,7 @@ function refsFor(root, targetName) {
   for (const p of walk(root)) {
     if (p.endsWith('.invariants.md')) continue;
     const b = basename(p);
-    if (b === 'check_invariants.test.mjs' || b === 'SKILL.md') continue;
+    if (b === 'ibr-code-invariants-check.test.mjs' || b === 'SKILL.md') continue;
     let text;
     try {
       if (statSync(p).size > MAX_SCAN_BYTES) continue;
@@ -1773,6 +2292,23 @@ function refsFor(root, targetName) {
   );
   console.log(`  code annotations: ${refs.length}`);
   for (const r of refs) console.log(`    ${r}`);
+  const wantedSlug = invariantHeadingSlug(wanted);
+  const definedPaths = new Set(definedIn.map((path) => resolve(root, path)));
+  const dependents = [];
+  for (const p of discover(root)) {
+    const { lines, active, records } = recordsWithKinds(p);
+    for (const { record } of records) {
+      if (
+        fieldLinks(p, lines, active, record, 'Stands on').some(
+          (link) => link.anchor === wantedSlug && definedPaths.has(link.targetPath),
+        )
+      ) {
+        dependents.push(`${relative(root, p)}: ${record.name}`);
+      }
+    }
+  }
+  console.log(`  stood on by: ${dependents.length}`);
+  for (const dependent of dependents) console.log(`    ${dependent}`);
   if (refs.length === 0 && definedIn.length) {
     console.log(
       `  note: no code annotation witnesses this invariant. If you just removed the last, it ` +
@@ -1814,7 +2350,7 @@ function main() {
     const name = positional[0];
     if (!name) {
       console.error(
-        "usage: check_invariants.mjs --refs-for '<Invariant Name>' [ROOT]",
+        "usage: ibr-code-invariants-check.mjs --refs-for '<Invariant Name>' [ROOT]",
       );
       return 2;
     }
@@ -1848,8 +2384,8 @@ function main() {
   }
 
   if (flags.has('--score')) {
-    // mechanical components for the invariant score (rubric lives in the skill's
-    // references/score.md — this emits facts, never a headline). JSON is the LAST line.
+    // mechanical facts about the contract layer (scoring lives in the ibr-code-review
+    // skill — this emits counts, never a headline). JSON is the LAST line.
     const root = resolve(pathArg ?? gitToplevel());
     console.log(`root ${root}`);
     const files = discover(root);
@@ -1858,20 +2394,16 @@ function main() {
       skip: 0,
       fail: 0,
       records: 0,
-      generatorRecords: 0,
     };
     for (const f of files) {
       const r = checkFile(f);
       if (r.status === 'pass') schema.pass++;
       else if (r.status === 'noncanonical') schema.skip++;
       else schema.fail++;
-      const m = /(\d+) generator, (\d+) reality, (\d+) chosen/.exec(
+      const m = /(\d+) reality, (\d+) chosen invariants(?: \(\+(\d+) in a legacy Generator section\))?/.exec(
         r.summary ?? '',
       );
-      if (m) {
-        schema.generatorRecords += +m[1];
-        schema.records += +m[1] + +m[2] + +m[3];
-      }
+      if (m) schema.records += +m[1] + +m[2] + +(m[3] ?? 0);
     }
     const refs = files.length
       ? checkRefs(root)
@@ -1895,7 +2427,7 @@ function main() {
 
   if (!pathArg) {
     console.error(
-      'usage: check_invariants.mjs PATH | --all [ROOT] [--strict] | --refs [ROOT] (--help for details)',
+      'usage: ibr-code-invariants-check.mjs PATH | --all [ROOT] [--strict] | --refs [ROOT] (--help for details)',
     );
     return 2;
   }

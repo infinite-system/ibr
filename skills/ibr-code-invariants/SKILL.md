@@ -1,5 +1,5 @@
 ---
-name: invariants
+name: ibr-code-invariants
 description: >-
   IBR invariant analysis of a posed change, question, or design against a project's recorded
   invariant contracts (*.invariants.md). Scope is DERIVED from the posed subject (touched paths
@@ -16,7 +16,7 @@ description: >-
   repos, languages, and frameworks.
 ---
 
-# /invariants [posed] [--scope a,b] [--depth verify|adversarial] [--check] [--audit] [--bootstrap]
+# /ibr-code-invariants [posed] [--scope a,b] [--depth verify|adversarial] [--check] [--audit] [--bootstrap]
 
 Hold a posed subject up against every recorded invariant it implicates — and hold the
 invariants up against reality (the code) at the same time. The contract file is *claims*; the
@@ -62,7 +62,7 @@ in step 4 is the operational core.
     invariants the main pass missed
 - **--check** — mechanical validation only: run the bundled checker (see The checker)
   with `--all` (schema) and `--refs` (annotation drift, test-header proofs,
-  source tripwires, and generator membership); report; no semantic analysis.
+  source tripwires, and composition); report; no semantic analysis.
 - **--audit** — freshness audit of the contract layer itself, no posed change needed. This
   is the mode for "check the invariants" / "is the contract stale?" (see Audit mode).
 - **--survey** — cold-start step for an uncodified repo: enumerate candidate subsystems
@@ -72,14 +72,12 @@ in step 4 is the operational core.
   record in the root `project.invariants.md` ("Core subsystems are contract-governed" —
   Scope lists them, Verification: re-run --survey and compare). Bootstrap then runs ONE
   subsystem at a time, hardest-first, never all at once.
-- **--score** — the invariant score: audit mode plus a fold. Read `references/score.md`
-  (rubric v1) BEFORE scoring. Two rules hold even unloaded: (1) the score is monotone in
-  governed surface — less contract = lower score; no contracts = UNSCORED, never a number;
-  (2) a score without its audit evidence attached is invalid. Headline is depth × breadth,
-  never collapsed. Mechanical components come from the checker's `--score` JSON.
 - **--bootstrap** — distill a new contract for a subsystem that has none (see Bootstrap
-  mode). `--depth` composes with the main procedure, `--audit`, and `--score` only; it does
-  not apply to `--check`, `--survey`, or `--bootstrap`.
+  mode). `--depth` composes with the main procedure and `--audit` only; it does not apply
+  to `--check`, `--survey`, or `--bootstrap`.
+
+Scoring the contracts — per-record scores, one percentage, and the hill climb that raises
+it — lives in the `/ibr-code-review` skill, not here.
 
 ## Procedure
 
@@ -144,9 +142,10 @@ in step 4 is the operational core.
   - When a file doesn't tag kind, infer it and say so — it changes what a violation means.
   - The dependency rule: **chosen invariants stand on reality invariants, never the
     reverse.** A chosen invariant contradicting a reality invariant is itself a finding.
-- Read the contract's Generator section and any linked standalone generator for composition
-  context. A change can stress a mechanism while each gear survives alone. The records stay
-  the truth; where a generator disagrees, the finding is against the generator.
+    A record's `Stands on` field writes the edge down, and the checker refuses a reality
+    record that stands on a choice.
+- Read the records that compose others (their Components link records) for composition
+  context. A change can stress a mechanism while each part survives alone.
 - Build the **shadow set**: load-bearing rules stated in code comments, `*.design.md`, or
   readmes of the scoped folders but absent from any contract. Grep for `invariant`, `must
   not`, `never`, `always`, `load-bearing`, `guarantee`. Shadow invariants get analyzed like
@@ -156,7 +155,7 @@ in step 4 is the operational core.
 
 Before any verdict, verify the invariant itself still holds in current code — a stale entry
 is a finding in its own right. Also run the **vacuity test** on the record: a field that
-cannot fail is not doing its job — an `Impossible if true` no bug report could ever match
+cannot fail is not doing its job — a `Rules out` that no bug report could ever match
 ("the system behaves incorrectly"), a `Verification` that verifies nothing (`true`, a
 command unrelated to the claim), Evidence that exists but demonstrates nothing. The schema
 checker validates shape only; vacuous-but-nonempty fields pass it. A vacuous field is a
@@ -234,24 +233,25 @@ everywhere it touches?
    as `discovered`.)
 5. **Proposed edits** — concrete diff-style proposals across all three layers: contract
    records (refined wordings, new entries from the reverse pass, stale corrections, kind
-   tags), missing/relocated annotations, and generator updates. **Adapt to each file's local
+   tags), missing/relocated annotations, and composition updates. **Adapt to each file's local
    format**; suggest (never impose) the canonical schema for files that lack structure.
    Apply only on explicit confirmation. Never modify enforcing code itself — findings about
    code are report items, not fixes.
    **Dependency ripple:** when a `refines` narrows or corrects a **reality** record, every
-   chosen record standing on it is implicated by definition (the dependency rule) — re-derive
-   each chosen record in the same contract (and generator compositions if one exists) against
-   the refined wording in the same review; a reality refinement with unexamined dependents
-   is an incomplete proposal.
-   **Rename ripple:** names are coupled across contract, annotations, and generator links —
+   record standing on it is implicated by definition (the dependency rule). `--refs-for
+   '<name>'` lists them under "stood on by". Re-derive each one, and each record composing
+   it, against the refined wording in the same review; a reality refinement with unexamined
+   dependents is an incomplete proposal. Where records do not yet use `Stands on`, treat
+   every chosen record in the contract as a dependent.
+   **Rename ripple:** names are coupled across contract, annotations, and links —
    a confirmed rename is applied together with every reference to it, in the same change
    (enumerate references by GREPPING for the old name and its slug across the checkout —
    `--refs` only lists breakage, not live references; after applying, re-run `--refs`: zero
-   problems is the done condition, and it now validates contract-links in every md file,
-   not just Generator sections and standalone files). Never apply a rename bare.
+   problems is the done condition, and it validates contract links in every md file).
+   Never apply a rename bare.
 6. **Final verdict** — `PASS`, or `BLOCKED` naming each fatal finding. BLOCKED means: a
    `violated` verdict stands (the record's boundary is breached in substance — a vacuous or
-   narrow `Impossible if true` wording does not rules-lawyer a real breach into PASS; fix
+   narrow `Rules out` wording does not rules-lawyer a real breach into PASS; fix
    the field via `refines` AND treat the breach on its merits) and no re-choice or
    renegotiation has been **accepted by the human in this confirmation** — tabled is not
    accepted; a proposed replacement discipline or a named coordination owner does not
@@ -289,37 +289,165 @@ code it governs (colocation is what makes path-implication work), or one
 `## Reality-based invariants`, then `## Chosen invariants` (`## Designed invariants` is an
 accepted legacy alias).
 
-Each record:
+The contract skeleton — copy it, then replace each placeholder:
 
 ```markdown
+# <Subsystem> invariants
+
+<One paragraph: what this subsystem is, and a link to its top composing record.>
+
+## Reality-based invariants
+
+### <A short plain sentence stating the rule>
+
+## Chosen invariants
+
+### <A short plain sentence stating the discipline>
+```
+
+Each record — a worked example first, then what each field is for:
+
+````markdown
 ### A non-ready route cannot transmit
 
-**Invariant:** If <scoped conditions hold>, then <what follows, independent of preference>.
+**Goal:** Every byte a node receives is in the format it agreed to, so no node
+ever has to guess how to decode what arrives.
 
-**Scope:** Exact conditions, subsystem, boundaries.
+**Invariant:** If a route has not completed format negotiation with both of its
+endpoints, then no byte enters it, and a send attempted on it is refused with
+the reason, not queued and not dropped.
 
-**Renegotiable at:** <wider scope owner> — reality-kind records only; omit when absolute.
+**Scope:** The patch bay (`src/patch-bay/`): every route between two nodes,
+from creation to teardown. It does not govern traffic inside a node, or the
+transport beneath a route once bytes are accepted.
 
-**Components:** Only when the invariant is compound (a violation could hit one part without the others). One line per part, each delete-testable — if nothing breaks when it's removed, it isn't a component. Omit for atomic invariants.
+**Components:**
 
-**Mechanism:** The bridge — why the constraint produces the observed behavior.
+- **Readiness is one state, owned by the route.** `Route.state` is the only
+  source of truth: nodes, the UI and the scheduler read it and never keep a
+  copy. Delete it and each reader caches its own idea of "ready", and the
+  copies disagree the moment an endpoint drops.
+- **The send seam checks readiness.** `Route.send()` is the single entry for
+  bytes, and it reads `state` before it accepts anything. Delete the check and
+  a send racing a renegotiation writes bytes in the old format.
+- **Losing an endpoint revokes readiness.** A disconnect moves the route back
+  to `negotiating` in the same tick, before any queued send runs. Delete it
+  and a route stays `ready` over a dead endpoint.
 
-**Generates:** What this invariant produces/derives downstream (designs, rules, guards). Optional but prized — an invariant that generates nothing is a description.
+The three together:
 
-**Rejected alternatives:** Optional zombie-defense against re-litigation. One line per killed rival: `<alternative> — <why it dies>`. Admit only alternatives that are actually tempting (already proposed once, or obviously going to recur); prune a line when its temptation dies. Not a history — git is the archive.
+```text
+created ──negotiate──▶ negotiating ──both endpoints ack──▶ ready
+                           ▲                                 │
+                           └────────── endpoint lost ────────┘
 
-**Open question:** Optional, at most ONE line: the current frontier of doubt — what would refine or narrow this record, so doubt aims there instead of re-breaking the settled. Replace when answered; never append.
-
-**Evidence:** Code, tests, traces, measurements, or reproducible observations. Cite precisely.
-
-**Impossible if true:** The concrete negative boundary — what can never be observed while this holds. This field is what makes the record falsifiable; a record without it is not an invariant yet.
-
-**Verification:** A reproducible command or inspection method.
-
-**Status:** provisional | established
-
-**Last refined:** YYYY-MM-DD
+send() on ready          → bytes accepted
+send() in any other state → RouteNotReady { route, state }  (nothing written)
 ```
+
+**Mechanism:** Format is agreed per route, so bytes are meaningful only after
+both endpoints have agreed. Making readiness a single owned state and checking
+it at the only entry point means no path exists by which bytes arrive early:
+the check does not have to be remembered at each call site, because there is
+only one call site.
+
+Revocation closes the remaining gap. Without it, readiness would be checked
+correctly against a state that has gone stale.
+
+**Generates:** the `RouteNotReady` error and its UI banner; the rule that
+nodes never buffer for a route (they wait on its state instead); the
+reconnect flow, which is just renegotiation.
+
+**Rejected alternatives:**
+
+- Queue sends until the route is ready — dies because a queue spanning a
+  format change replays bytes in the old format. Tried in `a1b2c3d`
+  (`grep -n pendingSends src/patch-bay/Route.ts`) under the two-device
+  reconnect smoke; the replay corrupted the first frame on every reconnect.
+
+**Open question:** Does a route need a `draining` state for in-flight bytes
+when an endpoint is lost mid-send?
+
+**Evidence:** `src/patch-bay/Route.ts` (`send`, `onEndpointLost`);
+`Route.test.ts` proves each component and the refusal.
+
+**Rules out:**
+
+- A byte observed on a route whose state is not `ready`.
+- A send that returns without either accepting the bytes or raising
+  `RouteNotReady`.
+- A route reporting `ready` after either endpoint has disconnected.
+
+**Verification:** `npm test -- Route.test.ts`; the negative fixtures plant a
+send on each non-ready state and assert the refusal and its reason.
+
+**Status:** established
+
+**Last refined:** 2026-11-09
+````
+
+What each field is for:
+
+- **Goal:** Chosen records only, and required on every one (a composition included): the
+  intent the invariant was chosen for — what it is FOR, which the if-then never states. The
+  Invariant says what holds; the Goal says why we wanted it to. Without it a choice can be
+  checked but never judged: nobody can tell whether the constraint still serves its purpose
+  or could be released, so it becomes permanent by default — construction without a goal is
+  how bad systems are made. A reality record has no Goal (reality was chosen by no one); the
+  checker refuses one there.
+- **Invariant:** `If <scoped conditions hold>, then <what follows, independent of preference>.`
+- **Scope:** Exact conditions, subsystem, boundaries — and what it does not govern.
+- **Renegotiable at:** `<wider scope owner>` — reality-kind records only; omit when absolute
+  (the example is chosen, so it has none).
+- **Components:** Only when the invariant is compound (a violation could hit one part without
+  the others). One bullet per part, written in full: what it is, where it lives, and what
+  breaks when it is deleted — if nothing breaks, it isn't a component. A diagram of how the
+  parts combine belongs here when the combination is not obvious from the bullets. Omit for
+  atomic invariants.
+- **Stands on:** Optional; for chosen records, the reality records this choice responds to.
+  One bullet per link, with why it matters here:
+  `- [Copies of a rule drift apart](#copies-of-a-rule-drift-apart) — a second copy is the
+  copy that drifts.` Components are a record's parts; Stands on gives its reasons. Delete a
+  component and the invariant no longer holds; delete what it stands on and you no longer
+  know why you chose it. A reality record may stand only on reality records. Once a
+  contract uses the field, the checker notes chosen records that stand on nothing: a choice
+  with no stated ground is built on an unknown foundation.
+- **Mechanism:** The bridge — why the constraint produces the observed behavior.
+- **Generates:** What this invariant produces/derives downstream (designs, rules, guards).
+  Optional but prized — an invariant that generates nothing is a description.
+- **Rejected alternatives:** Optional zombie-defense against re-litigation. One bullet per
+  killed rival: `<alternative> — <why it dies>`, with HOW it was tried beside the verdict (the
+  regime it was judged in, the devices, the confounds present, and where the tried code lives
+  — a commit plus a grep phrase, or, for a trial never committed, the recipe itself in enough
+  detail to rebuild it). A rejection without its trial is a claim, not a verdict, and the next
+  reader may reopen it. Admit only alternatives that are actually tempting (already proposed
+  once, or obviously going to recur); prune a bullet when its temptation dies.
+- **Open question:** Optional, at most ONE line: the current frontier of doubt — what would
+  refine or narrow this record, so doubt aims there instead of re-breaking the settled.
+  Replace when answered; never append.
+- **Evidence:** Code, tests, traces, measurements, or reproducible observations. Pointers,
+  not prose: `file:line`, test names, numbers — one step to follow.
+- **Rules out:** The concrete negative boundary — what can never be observed while
+  this holds, phrased as events a bug report could match ("X receives prompt bytes after a
+  refused resolution", not "inconsistency arises"). This field is what makes the record
+  falsifiable; a record without it is not an invariant yet.
+- **Verification:** A command someone can copy and run, or a mechanical inspection step.
+- **Status:** `provisional` | `established`
+- **Last refined:** `YYYY-MM-DD`
+
+**A record holds everything about its invariant.** Components written in full, a
+Mechanism in paragraphs, and a diagram in a fenced block (inert to the checker) carry
+everything a separate prose file would, beside the claims, where they cannot drift apart.
+
+**A field is as long as it needs to be.** A field opens on its label in bold at the start
+of a line (`**Mechanism:** …`) and runs until the next label or heading — paragraphs, blank
+lines and bullet lists included. Bold words inside a body, bold-labelled bullets included,
+stay body. A line that opens like a field with a label the schema does not know
+(`**Mechansim:**`) fails as an unknown field rather than vanishing into the field above
+it; if it is body, make it a bullet or drop the bold. A label appears ONCE per record:
+the checker fails a record that repeats one, so an agent that meant to continue a field
+learns to continue it rather than restart it. Write prose, not a single line that goes on
+and on.
 
 **Invariants are unnumbered.** The name is the identifier: unique within the file, carried
 by section membership (not an ID letter). Reference invariants **by name, never by
@@ -330,9 +458,11 @@ with a migration note.)
 **Naming style — plain declarative, not clever.**
 
 - **Form:** a short declarative sentence stating the rule — subject + verb + constraint,
-  plain words, concrete things (route, identity, cache — not abstractions). 3–9 words;
-  needing more usually means the invariant is compound (use Components) or the precision
-  belongs in the Invariant field. The name carries the gist; the if-then carries the spec.
+  plain words, concrete things (route, identity, cache — not abstractions), 3–12 words.
+  The name carries the gist; the if-then carries the spec. At any length, ask two
+  questions: does the name join two claims with "and"? Then split it into two records, or
+  make the claims Components. Does it restate the if-then? Then move that precision into
+  the Invariant. The checker notes a name over 12 words.
 - **The annotation test (the gate):** someone seeing ONLY the name at an enforcement point
   must get the gist of what not to break. "A non-ready route cannot transmit" passes;
   "Loud Over Silent" fails — a slogan that needs its body to decode is a lookup, not a
@@ -345,15 +475,23 @@ with a migration note.)
   silently rewrite (straight quote → curly, `--` → em-dash) — visually identical,
   byte-different, producing orphans that look correct on screen. Secondary reason: on this
   charset every platform's heading-anchor algorithm agrees with the canonical slug, so
-  generator links click through everywhere.
+  record links click through everywhere.
 - **Unique per file in slug-space** (case- and punctuation-folded) — slugs are reference
   identity. The checker enforces uniqueness as an error; charset violations are
   informational notes by design (legacy tolerance) — new names must comply.
-**Writing style:** before writing or refining any record or generator, read
-`references/authoring.md` — the per-field style guide (graspable-not-clever, real
-identifiers, one-if-then, pointers-not-prose). Non-negotiable core, always in force: fields
-are read mid-edit by someone with thirty seconds AND consumed by machinery (grep, citation
-re-resolution, executed Verification) — plain, concrete, exact.
+**Writing style — every field, graspable not clever.** A record is read mid-edit by
+someone (human or AI) with thirty seconds, AND consumed by machinery: scope derivation
+greps these files, audits re-resolve the citations, Verification gets executed. So:
+
+- Short sentences, active voice, plain words. No metaphors, no wordplay — cleverness does
+  not survive the trip into a debugging session.
+- Use the codebase's **real identifiers** (actual file, function, table, env-var names) and
+  the **same word for the same thing** every time — a synonym chosen for elegance breaks
+  the grep that content-implication scoping depends on.
+- Length is not the defect, mixing is. A field that explains two things splits: the second
+  thing is a Component, or its own record.
+- The contract is a **working instrument, not an archive** — git is the archive. Content
+  that stops being load-bearing for a mid-edit reader leaves the record.
 
 Category boundary: never rewrite a reality invariant by preference or to admit a change —
 refine it only when evidence falsifies or narrows it. Change a chosen invariant only
@@ -363,15 +501,15 @@ even when its status is `established`.
 
 ## The checker
 
-`scripts/check_invariants.mjs` lives **inside this skill's folder** — locate it relative to
+`scripts/ibr-code-invariants-check.mjs` lives **inside this skill's folder** — locate it relative to
 this SKILL.md; never assume a copy at the target repo's root, and never copy it into target
 repos (one script, one truth). Single-file Node >=18, zero dependencies — works in any
 environment, no Claude harness required (`--help` prints usage).
 
 ```bash
-node <this-skill-dir>/scripts/check_invariants.mjs PATH    # one contract
-node <this-skill-dir>/scripts/check_invariants.mjs --all   # every contract in the checkout
-node <this-skill-dir>/scripts/check_invariants.mjs --refs  # annotation drift + coverage
+node <this-skill-dir>/scripts/ibr-code-invariants-check.mjs PATH    # one contract
+node <this-skill-dir>/scripts/ibr-code-invariants-check.mjs --all   # every contract in the checkout
+node <this-skill-dir>/scripts/ibr-code-invariants-check.mjs --refs  # annotation drift + coverage
 ```
 
 Invoke it from anywhere inside the target checkout: `--all`/`--refs` root themselves at the
@@ -385,12 +523,20 @@ normalized; fenced code blocks, HTML comments, and inline code spans are inert; 
 values may wrap onto continuation lines and are read in full.
 
 **Know its blind spots** (and reconcile them against step 1's manual enumeration):
-- It skips `node_modules/`, `.git/`, `.claude/`, `scripts/retired-smokes/`,
-  and any nested checkout (a directory with its own `.git` — printed as a
-  `note:`). A contract living under `.claude/` is visible to manual
-  enumeration but invisible to the checker, permanently — flag the
-  divergence. Retired smokes are deliberately outside live annotation and
-  contract coverage.
+- It skips every path git ignores (`.gitignore` and friends — one summary `note:` with the
+  count), so a live checkout full of scratch and a fresh clone get the same result; a file
+  force-added inside an ignored directory is tracked, so it IS scanned. Outside a git
+  checkout this rule does nothing. It also skips `node_modules/`, `.git/`, `.claude/`, any
+  nested checkout (a directory with its own `.git` — printed as a `note:`), and every
+  directory listed in an optional `.invariantsignore` at the walk root (one root-relative
+  path per line, `#` comments) — for TRACKED directories that still must not be read.
+- Files over 2 MB are skipped with a `note:` — annotation scan and markdown link pass
+  alike. Contracts (`*.invariants.md`) are always read in full.
+  A contract living under `.claude/` is visible to manual enumeration but invisible to
+  the checker, permanently — flag the divergence. List a directory in
+  `.invariantsignore` only when it holds annotation-shaped text that was never meant to
+  resolve (scratch space, archived transcripts, retired scripts); ignoring a live
+  directory exempts it from enforcement, so review that diff as gate-relevant.
 - Contract diffs deserve fence-vigilance: fencing a record's lines makes it INERT (the
   checker notes fenced record-shaped headings) — review a fence appearing around a record
   as a deletion, because for enforcement it is one. Likewise a new `.git` directory
@@ -406,7 +552,7 @@ values may wrap onto continuation lines and are read in full.
 - Non-canonical (local-format) files are `SKIP`ped, not failed — **every SKIP line is a
   migration-candidate finding**, and CI that wants a hard format gate passes `--strict`
   (with `--all`), which turns SKIPs into failures. The test suite sits alongside
-(`node --test <this-skill-dir>/scripts/check_invariants.test.mjs` — target the file, not
+(`node --test <this-skill-dir>/scripts/ibr-code-invariants-check.test.mjs` — target the file, not
 the directory; directory mode would also execute the checker itself).
 
 ## Integration events — the unverified moments
@@ -491,107 +637,183 @@ comment at each enforcement point, in whatever comment syntax the language uses:
   is the gate against annotating to silence coverage. Never scatter anchor comments just to satisfy
   coverage — that is the metric degrading the architecture.
 
-## Generator architecture
+## How invariants compose
 
-An invariant is a gear: one irreducible conceptual constraint from reality or choice. A
-generator is the mechanism: gears combined with a direction-of-use vector and indexed by
-goal. The same gears pointed at another goal form another generator. A spec is the
-implemented extraction that the generator produces for one use. A bare invariant never
-produces a spec.
+Every invariant generates: what follows from it (Generates) and what it rules out
+(Rules out). A record **composes** others when its Components link them, and a
+composing record is still just an invariant: a higher-order one, standing on the records
+it links. Composition has no section and no special kind. What composes at one level is
+a component at the next, and a record composing nothing is fine.
 
-Spec count may grow only while defects stay flat. Flat defects show that the mechanism
-constrains the space. Defect growth shows that the generator leaks.
+Spec count may grow only while defects stay flat. Flat defects show that the composition
+constrains the space. Defect growth shows that it leaks.
 
-A generator is itself an invariant: a record whose Components are other invariants and
-whose Scope carries the goal. It gets the full record form — Mechanism, Evidence,
-Verification, and its own `Impossible if true` boundary. A generator with no impossibility
-is a description, not a mechanism.
+**Goal is what construction adds.** An invariant states what holds, never why we wanted it
+to. Reality invariants have no why: nobody chose them. Every chosen invariant carries a
+**Goal**, and so does every composing record, because combining records is a choice. The
+Goal is what lets a choice be judged and released. Construction without a goal is how bad
+systems are made.
 
-A `*.invariants.md` is the subsystem contract — gears plus the mechanism in record form;
-a `*.generator.md` is PROSE ONLY — the narrative, evidence arc, and ladder for a graduated
-mechanism (its links are still checked; its content never gates and never claims record
-membership). The generator record's Components are the only generator-coverage membership.
-Never give a contract
-the generator suffix. Never put gear records in a generator file.
+The same grammar lives at two levels, and the level is set by where a record lives:
 
-The division of readers: an AI scanning the contract alone gets the deep falsifiable
-picture; the prose generator is for human plus AI when full context is needed. Every
-contract Generator section ADVERTISES its prose file with a STUDY ALSO pointer that says
-when to read it. Reference implementation: `engineering.invariants.md` (the generator
-record "Primitives compound capability while defects stay flat") with
-`engineering.generator.md` as its prose.
+- **Architectural**: `*.invariants.md`, how the subsystem's records combine, independent
+  of any one file. Put the top composing record first among the chosen records, and link
+  to it from the contract's opening paragraph.
+- **Implementation**: the first block comment of `X.test.ts`, the invariants this one
+  implementation realizes, proved by the tests beneath them. It links UP to contract
+  records and never restates them.
 
-| Layer | Required shape |
-| --- | --- |
-| Standalone generator | `<home>.generator.md`; prose only; one graduated mechanism with one stable goal or class identity. |
-| Contract generator | Top `## Generator` section: two to four lines of orientation prose, the STUDY ALSO pointer, then the mechanism as a full invariant record (goal in Scope; Components listing each gear with a one-line why, delete-testable; Impossible if true). |
-| Test-file generator header | The FIRST block of `<file>.test.ts`: two registers, formal then described. Proofs are the tests beneath it. |
-| Line annotation | The unchanged tripwire at each enforcement point. |
+The test that tells them apart: delete the source file. A contract record still means
+something; a test-file record means nothing without the code it describes.
 
-Graduate a contract mechanism when any one condition holds: it exceeds one screen, spans
-contracts, is embodied by a load-bearing class, or gains a second distinct goal. Keep a
-two-line goal summary and link in the contract after graduation. Use the mechanism's most
-concrete stable home in its filename: goal-named or class-named.
+A mechanism that spans subsystems lives in the contract that owns the highest dependent
+(`project.invariants.md` once more than one subsystem contract exists) and links down to
+the records it composes.
 
-Claims, proofs, and tripwires have three roles and two homes. A claim (the generator:
-goal, domain-invariants, impossibility) lives beside its proof, in the TEST file, because
-that is the only place the two can be checked against each other. A tripwire (the line
-annotation) lives at the enforcement point, in the SOURCE file. The source carries no
-generator block. The colocated test is the structural pointer from source to claims.
+**Legacy forms.** A `## Generator` section still parses, with a note: move its record under
+`## Chosen invariants`. `*.generator.md` and `*.lattice.md` prose files are retired and
+noted: fold what they carry into the records' fields.
 
-The generator header is the test file's constitution and its FIRST content — before
-imports, before the first test:
+Local claims, proofs, and tripwires have three roles and two homes. A local claim (a
+record in the test-file header) lives beside its proof, in the TEST file, because that is
+the only place the two can be checked against each other. A tripwire (the line annotation)
+lives at the enforcement point, in the SOURCE file. The source carries no invariant block.
+The colocated test is the structural pointer from source to claims.
 
-```ts
+The header is the test file's constitution and its FIRST content — before imports, before
+the first test:
+
+````ts
 /*
-=== GENERATOR ===
-Goal: ...
-The formal register: pointers to contract records, never restatements.
-[A contract record](path.invariants.md#a-contract-record)
-// domain-invariant: <symbol> — <one-line if-then>
-Impossible if true: <the local mechanism's negative space>
+## Reality-based invariants
 
-=== GENERATOR-DESCRIBED ===
-The prose register: why this shape, the direction of use, what a fresh
-session must not simplify away. Never gates; never restates the formal part.
-*/
+### A socket peer can vanish mid-request
 
-// domain-invariant: <symbol> — <the if-then this test proves>
-test('<the property, stated as a sentence>', ...)
+**Invariant:** If the remote peer disconnects, then the socket closes with no reply to
+requests still in flight.
 
-// impossible-if-true: <symbol> — <the exact Impossible if true text>
-test('<the negative property, stated as a sentence>', ...)
+**Scope:** The socket under `ChannelClient`, any platform.
 
-// invariant: <record name> (<contract path>)
-test('<the property, stated as a sentence>', ...)
+**Mechanism:** TCP gives no delivery receipt for a request whose peer is gone.
+
+**Rules out:** A reply delivered after the socket has closed.
+
+**Status:** established
+
+**Last refined:** 2026-11-09
+
+## Chosen invariants
+
+### One negotiated channel carries uploads and file dialogs
+
+**Goal:** Remote users upload files and answer host file dialogs safely, even when the
+two ends run different versions.
+
+**Invariant:** If a remote session opens, then ChannelClient carries uploads and dialog
+requests only over a negotiated channel, each request returning its matching result.
+
+**Scope:** `ChannelClient` (ChannelClient.ts), from open to close.
+
+**Components:**
+
+- [Terminal bytes cross remotely](../../project.invariants.md#terminal-bytes-cross-remotely)
+  — uploads and dialogs ride this channel instead of a remote mount.
+- [A socket peer can vanish mid-request](#a-socket-peer-can-vanish-mid-request) — what the
+  network guarantees, and does not.
+- [Negotiation precedes channel traffic](#negotiation-precedes-channel-traffic) — what
+  this file chose on top of it.
+
+```text
+open ──negotiate──▶ ready ──upload / dialog──▶ matching result
+  └── any traffic before ready ──▶ refused
 ```
 
-The Goal line is the generator's purpose: what the mechanism produces and the tension it
-resolves, in the module's own domain words (rows, panes, tokens, matches — never "behavior",
-"consistency", or "this file"). The test: read the Goal alone — a reader must know which
-mechanism this is without the file name; a Goal that fits another file with the name swapped
-is not a Goal. The described register says only what the formal lines cannot (why this
-shape and not the obvious alternative, the direction of use, the caveat a fresh session
-would simplify away, `Open question:` lines for what the tests do not reach); a sentence
-that fits every file belongs in no file.
+**Mechanism:** One negotiation gates one channel, so no traffic path skips it; a peer
+that vanishes fails the pending request instead of leaving it waiting.
 
-An optional `Subject:` line in the formal register names the source file(s) the header's
-symbols resolve against (one or more paths; a cross-source or contract-only proof may name
-none). When absent, the same-named sibling source is the subject. The checker verifies the
-line when present and applies the sibling default when not.
+**Rules out:** A request that never resolves after its peer disconnects.
 
-The Goal and the formal register cohere in both directions — for the file's OWN claims. A
-contract-record link is a hosted-proof binding to an external generator: it must have an
-annotated test in the file (the bijection), and it is exempt from the Goal-deletion test —
-the goal it serves is the record's, not this file's. The rule below binds domain-invariant
-and impossibility lines: the Goal is the index that turns
-these gears into this mechanism, so every formal line is load-bearing for the Goal (delete
-it and the Goal is no longer reachable — if the Goal survives, the line belongs to another
-mechanism or the Goal is too narrow), and the Goal is reachable from the formal lines alone
-(if it needs a claim the header does not carry, a component is missing or the Goal
-overreaches). The described register carries the direction of use — how these gears combine
-toward this goal — which is why it cannot be templated. Impossible if the header coheres: a
-formal line whose deletion leaves the Goal intact; a Goal that needs a claim the header lacks.
+**Status:** established
+
+**Last refined:** 2026-11-09
+
+### Negotiation precedes channel traffic
+
+**Goal:** Neither end ever decodes bytes in a protocol version it did not agree to.
+
+**Invariant:** If ChannelClient opens a channel, then no upload or dialog byte crosses it
+before version negotiation succeeds.
+
+**Scope:** `ChannelClient.send` and every path that writes to the channel.
+
+**Mechanism:** `send` checks the negotiated state first; nothing else writes the channel.
+
+**Rules out:**
+
+- Upload bytes or a dialog response cross the channel before negotiation succeeds.
+
+**Status:** established
+
+**Last refined:** 2026-11-09
+*/
+
+// local-invariant: One negotiated channel carries uploads and file dialogs
+test('an upload and a dialog each return their matching result', ...)
+
+// rules-out: One negotiated channel carries uploads and file dialogs — A request that never resolves after its peer disconnects.
+test('a pending request fails when its peer disconnects', ...)
+
+// invariant: Terminal bytes cross remotely (project.invariants.md)
+test('uploads ride the channel, never a remote mount', ...)
+
+// local-invariant: A socket peer can vanish mid-request
+test('a disconnect closes the socket with requests unanswered', ...)
+
+// rules-out: A socket peer can vanish mid-request — A reply delivered after the socket has closed.
+test('no reply arrives after close', ...)
+
+// local-invariant: Negotiation precedes channel traffic
+test('no upload byte crosses before negotiation succeeds', ...)
+
+// rules-out: Negotiation precedes channel traffic — Upload bytes or a dialog response cross the channel before negotiation succeeds.
+test('a dialog response before negotiation is refused', ...)
+````
+
+**Full records, same rules.** Every record in the header follows the contract schema and
+naming style: Invariant, Scope, Mechanism, Rules out, Status and Last refined are
+required (Last refined dates the record's refinement, which a file's git date cannot);
+Goal on every chosen record and composition, never on a reality record. Evidence and
+Verification are omitted — the tests beneath are both. A record name must tell a reader
+which mechanism this is without the file name; one that fits another file with the name
+swapped is not this file's.
+
+**Sections as needed.** A header may omit a section it has no records for — a file of only
+chosen records needs no empty `## Reality-based invariants` heading. (Contracts keep both
+headings, empty or not.)
+
+**A composition only where records combine.** A file whose records combine into one
+mechanism (a class, usually) gets a chosen record whose Components link them. A bag of
+functions simply lists independent records. A file with no claim worth a test has no
+header at all.
+
+**Claim identity is the record name.** A record is proved by
+`// local-invariant: <record name>`; each of its `Rules out` bullets (or the whole
+field, when it has no bullets) by `// rules-out: <record name> — <exact text>`; a
+component linking a contract record by `// invariant: <record name> (<contract path>)`,
+the path root-relative. A bullet's wrapped lines join with single spaces, so rewrapping
+never breaks a proof, and rewording a claim never touches its annotations — only renaming
+the record does. A component link `#anchor` must name a record in the same header. Fenced
+blocks are inert: a diagram can sit in any field, Components included.
+
+**Coherence.** A composition and its components cohere in both directions — for the file's
+OWN records. Every local component is load-bearing for the composition's Invariant: delete
+it and the Invariant no longer follows (if it survives, the component belongs to another
+mechanism or the Invariant is too narrow). And the Invariant follows from the components
+alone (if it needs a claim the header does not carry, a record is missing or the Invariant
+overreaches). A contract-record component is exempt from the deletion test — it is a
+hosted proof of the record's claim, not this file's — but it still needs its annotated
+test. Chosen records stand on reality records, never the reverse, inside a header as in a
+contract.
 
 Every test that proves a claim carries the claim's annotation directly above it. The
 test name states the property. There is no spec register: a proof binding written as a
@@ -599,26 +821,80 @@ row would only repeat the test name beside it. Proof coverage is the checker's q
 a header claim with no annotated test, or an annotated test whose claim is not in the
 header, is a finding.
 
-The two registers mirror the doc layers: formal (falsifiable) is the contract's record,
-described (prose) is the generator file. One structure at two scopes.
+**Legacy form.** Headers written before contract sections — `=== GENERATOR ===`, a `Goal:`
+line, `// domain-invariant: <symbol> — <claim>` lines and `Impossible if true:` lines, then
+`=== GENERATOR-DESCRIBED ===` prose — still pass, with one summary `note:` counting them;
+`// domain-invariant:` is accepted as an alias of `// local-invariant:` in tests and
+source alike. To migrate: give each domain-invariant line a full record (a name, an
+if-then, Scope, Mechanism, Rules out, Status, Last refined, and a Goal if it was
+chosen) under the right section; turn the Goal line and the described prose into a
+composing chosen record when the records combine; prove each record by name; drop both
+markers.
 
 Rules the checker holds:
 
-- A header domain-invariant names a symbol declared in the SIBLING source
-  (`X.test.ts` claims about `X.ts`).
-- Every header domain-invariant, contract-record pointer, and `Impossible if true` line has
-  at least one annotated test in the same file. An impossibility proof uses
-  `// impossible-if-true: <symbol> — <exact text>`, with a symbol declared by the header.
-  Domain-invariant and impossibility annotations never prove each other's claims.
-- A `// domain-invariant:` tripwire in source resolves to a header line in its sibling test.
-- `=== GENERATOR ===` in a non-test `.ts` file is a migration finding.
+- Every header record is a full record in the contract schema (minus Evidence and
+  Verification), Goal included where it is chosen.
+- Every record, every `Rules out` claim, and every contract-record component has at
+  least one annotated test in the same file. `<symbol> — <claim>` annotations belong to the
+  legacy form only.
+- A `// local-invariant: <record name>` tripwire in source resolves to a record in its
+  sibling test's header. A header record with no tripwire in its sibling source is noted —
+  except a composition, which is enforced through its parts.
+- A component `#anchor` that names no record in the header is a finding.
+- An invariant block in a non-test `.ts` file is a migration finding.
 
-Keep upstream records as references. Header prose owns only what no upstream record owns.
-Keep line annotations at their enforcement points. Use single-star glob forms inside the
-block because a star-slash closes it.
+Keep upstream records as references. A header record owns only what no upstream record
+owns. Keep line annotations at their enforcement points. Use single-star glob forms inside
+the block because a star-slash closes it.
 
-A domain-invariant stays local only while nothing across the seam depends on it. Promote it
-to a full contract record as soon as a second file or subsystem depends on it.
+**Promotion — a local record becomes a contract record.** This is welcome, not a repair: a
+claim proved in one implementation turned out to be structure the subsystem stands on. The
+header was where it was found; the contract is where it lives once others build on it.
+
+*When.* Any one of these is enough:
+
+- **A second file depends on it** — its source carries a tripwire for the record, or its
+  tests prove it. The checker detects this: a `// local-invariant: <name>` in a file whose
+  own header lacks `<name>`, while another header holds it, is reported with "time to
+  promote it".
+- **The delete test says so** — delete the source file in your head. If the record would
+  still mean something, it was architectural all along.
+- **The same claim appears in two headers** — two homes for one claim means it belongs to
+  neither file.
+
+*Where.* The contract colocated with the code the record governs; when its dependents span
+subsystems, the contract that owns the highest dependent (`project.invariants.md` across
+subsystems). Search that contract first: if a record already states the claim, refine that
+record and link it — do not add a duplicate.
+
+*How* — one change, all steps together:
+
+1. **Move the record verbatim** into the contract's matching section: reality stays
+   reality, chosen keeps its Goal. Rewording during the move hides a refinement inside a
+   relocation — make any rewording its own change, after.
+2. **Add what the header's location supplied:** Evidence — the test file and the test names
+   that prove it; Verification — the command that runs them. Set Last refined to the
+   promotion date.
+3. **In the header, delete the record.** Where a local composition listed it
+   (`[name](#anchor)`), link the contract record instead
+   (`[name](<contract path>#anchor)`) — the header keeps hosting the proof.
+4. **Re-annotate in every file:** proofs and tripwires `// local-invariant: <name>` become
+   `// invariant: <name> (<contract path>)`, the path root-relative. Negative tests keep
+   `// rules-out: <name> — <text>`; the checker resolves them against the contract
+   record through the header's link, so no negative proof is lost.
+5. **Compose it**: if a contract record now stands on the promoted record, add it to that
+   record's Components.
+6. **Run `--all --refs`.** Zero problems is the done condition.
+
+*What the checker holds:* a second dependent on a local record is a finding that names the
+record's home and says to promote it; a record named in a header AND a contract "lives in
+two homes" — a promotion left half done; a negative test whose text no longer matches the
+promoted record is a finding.
+
+Impossible if promotion is done right: a record living in two homes; a promotion that
+changed the claim (a refinement hiding in a move); a proof lost in the move — every test
+that proved the local record still proves the contract record.
 
 **References — standard markdown links; the anchor is the identity.**
 
@@ -644,17 +920,13 @@ to a full contract record as soon as a second file or subsystem depends on it.
   resolve the anchor and confirm it names the record the sentence means. A free alias
   over a wrong-but-valid anchor is invisible to the checker; only this habit and the
   audit catch it.
-- The checker (`--refs`) validates every generator link mechanically: anchors resolve,
-  link text does not name another record, and reference keys exist. It reports records that
-  no generator record lists in its Components field. Links in prose companions still resolve
-  and count as links, but they do not claim membership.
+- The checker (`--refs`) validates every link mechanically: anchors resolve, link text
+  does not name another record, and reference keys exist. In a contract where some record
+  composes others, it notes the records nothing composes. Only links inside a Components
+  field compose; links anywhere else just resolve.
 
-Keep only live composition. History lives in git. A new gear enters the contract before the
-generator can use it.
-
-`<name>.lattice.md` remains accepted as the reflective legacy form. It is correct when the
-structure is discovered rather than engineered, as in the ethics investigation that gave
-the form its name. Engineering repositories use `<name>.generator.md`.
+Keep only live composition. History lives in git. A record enters the contract before
+another record can compose it.
 
 ## Audit mode
 
@@ -681,7 +953,7 @@ claims, the code is reality — verify the claims wholesale.
    - Verdict per invariant: `upheld` (evidence checked) / `stale` (no longer matches code)
      / `refines` (reality reveals a sharper statement) / `violated` (the code actively
      breaks it right now — audits can find live breaches, not just documentation drift).
-     `discovered` may also arise here and in step 5; all verdicts share the main table's
+     `discovered` may also arise here and in step 6; all verdicts share the main table's
      definitions.
    - **Status transitions:** propose `provisional` → `established` when Evidence cites real
      artifacts, Verification runs green, and the record has survived review pressure; propose
@@ -691,24 +963,28 @@ claims, the code is reality — verify the claims wholesale.
      when the claim itself lost support. Weakening records because their guards were
      carelessly deleted is the system injuring itself through its own rules. Status changes
      are proposals like any other edit.
-3. **Annotation coverage** — the checker's `--refs` prints `coverage <file>: no annotations reference: …`
+3. **Promotion candidates** — every "time to promote it" finding from `--refs`, plus any
+   claim stated in two test headers, plus any header record that passes the delete test
+   (it would still mean something with its source file gone). Propose each promotion with
+   its target contract, per "Promotion" under How invariants compose.
+4. **Annotation coverage** — the checker's `--refs` prints `coverage <file>: no annotations reference: …`
    for canonical records with zero reverse pointers. For each such invariant (and for every
    invariant in local-format contracts, which the script cannot cover-check), locate its
    enforcement points from the Mechanism/Evidence citations and **propose the missing
    annotation comments** as concrete insertions. A contract whose code carries no reverse
    pointers is unprotected against the next editing session.
-4. **Format migration** — non-canonical contracts (reported `SKIP … local format`) get a
+5. **Format migration** — non-canonical contracts (reported `SKIP … local format`) get a
    full migration proposal to the canonical schema: records, kinds, all eight fields
    (mining Mechanism/Evidence/Verification from the prose and the code it describes),
    preserving the original's voice in the Invariant statements. Propose-only, like
    everything else.
-5. **Generator check** — the checker already validated anchors mechanically (audit step 1); the
+6. **Composition check** — the checker already validated anchors mechanically (audit step 1); the
    judgment share: for each link, confirm the surrounding prose describes the record its
    anchor actually names — a free alias meaning a different record is a `stale`-class
    finding the machine cannot see. Then: every composition claim still follows from the
    current records (a claim that no longer follows is `stale`); a rule found here but
    absent from the records is a `discovered` that must move into the contract.
-6. **Report** with the usual discipline: a fully-fresh contract layer gets ONE line —
+7. **Report** with the usual discipline: a fully-fresh contract layer gets ONE line —
    and that line must state what was actually done: "N records: K verifications executed,
    J confirmed by citation-resolution only — all upheld, annotations resolve." An audit
    that ran nothing must be distinguishable from an audit that verified everything; spend
@@ -726,18 +1002,17 @@ When a scoped subsystem has design docs / code but no contract (never automatic;
 or accepted offer): mine `*.design.md`, readmes, and code comments for the load-bearing
 rules; name each per the naming style (plain declarative sentence — the annotation test);
 classify each as reality-absolute / reality-renegotiable-at / chosen; write
-`<subsystem>.invariants.md` **next to the subsystem's code**, from
-`references/contract-template.md`; include the dependency rule; mark everything `provisional`
+`<subsystem>.invariants.md` **next to the subsystem's code**, from the contract skeleton
+(under The record schema); include the dependency rule; mark everything `provisional`
 until evidence upgrades it. Before minting records, check ancestor and sibling contracts (path-implication upward) for
 overlapping or conflicting records — reference or extend them instead of duplicating.
 The request to bootstrap authorizes the work, not the write — and confirm in CHUNKS:
 present records in small batches (~5, grouped by topic), each batch confirmed separately;
 a wall-of-text confirmation at the moment the human knows least is how vacuous records
 become baseline. Everything enters as `provisional`; the first audit re-runs the vacuity
-test on bootstrapped records. Add the bounded Generator section when the contract reaches
-two records. Graduate it only when a split trigger applies. Once two or more subsystem
-contracts exist, a cross-contract project mechanism normally graduates to
-`project.generator.md`; the survey's import graph is its first draft. Prize impossibility
+test on bootstrapped records. When records combine, add a composing chosen record. Once
+two or more subsystem contracts exist, a cross-contract mechanism lives in a composing
+record of `project.invariants.md`; the survey's import graph is its first draft. Prize impossibility
 statements — they give the contract teeth.
 
 ## Known limits — what this system cannot enforce
@@ -769,7 +1044,7 @@ Mitigations are named; none of these limits is secretly solved elsewhere.
 5. **Audit recency is not persisted.** No artifact records when the last semantic audit
    ran; `Last refined` tracks edits, not verification. Rely on CI cadence for the
    mechanical layer and calendar discipline for the semantic one.
-6. **Single-repo by construction.** Annotations and generator links resolve only against
+6. **Single-repo by construction.** Annotations and links resolve only against
    contracts inside the current checkout — code in one repo cannot reference a platform
    contract living in another. The workaround (vendoring a copy) creates an unsynced
    duplicate; if you vendor, treat the copy as read-only and re-vendor on upstream change.
@@ -780,7 +1055,7 @@ Mitigations are named; none of these limits is secretly solved elsewhere.
    during another session's rename ripple sees transient orphans (red, not green — it
    fails safe, but it cries wolf). No lock exists; coordinate sessions or expect
    intermittent noise.
-8. **Scope derivation degrades with generator size.** Content-implication over shared
+8. **Scope derivation degrades with contract size.** Content-implication over shared
    vocabulary implicates broadly as contracts multiply; prefer the diff's rarest, most
    specific identifiers when grepping, and audit stalest-first (via each contract's git
    history) rather than everything-always.

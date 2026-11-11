@@ -2,7 +2,7 @@
 
 A method for reducing a problem to the irreducible structures that actually exist in its
 domain — by eliminating non-structural assumptions until the invariant geometry emerges,
-then generating from it to confirm. This package ships the framework and two Claude skills
+then generating from it to confirm. This package ships the framework and five Claude skills
 that put it to work.
 
 - **`IBR.md`** — the full framework: the axioms (each marked discovered or chosen), the
@@ -14,9 +14,20 @@ that put it to work.
   claude --append-system-prompt-file node_modules/@ibr-foundation/ibr/IBR.md
   ```
 - **`/ibr` skill** — loads IBR as a session's reasoning engine and applies it operationally.
-- **`/invariants` skill** — persists and enforces a codebase's load-bearing invariants as
-  contract files (`*.invariants.md`), with a zero-dependency checker, scope derivation,
-  scoring, and audit modes.
+- **`/ibr-code-invariants` skill** — records a codebase's load-bearing invariants as
+  contract files (`*.invariants.md`), checks changes against them, and ships a
+  zero-dependency checker. Every chosen invariant states its Goal and the reality it
+  stands on; what each one rules out makes it falsifiable.
+- **`/ibr-code-testing` skill** — writes tests that prove the contract: the invariants at
+  the top of a test file state the claims, each test beneath proves one by name, and every
+  "rules out" gets a test that must fail on the defect.
+- **`/ibr-code-review` skill** — reviews a codebase through its contracts and scores it:
+  an independent reviewer audits every record and hunts for bugs and simplicity gaps, and a
+  script checks each score against its evidence. Runs once, or as a hill climb that fixes
+  what each round finds.
+- **`/ibr-code-standards` skill** — coding standards written as invariants, each with its
+  Goal and the facts it stands on: names unfold to the domain, a rule is stated once,
+  sharing waits for the second dependent, and more.
 
 ## Install the skills into a project
 
@@ -25,7 +36,14 @@ npx @ibr-foundation/ibr install          # into ./.claude/skills
 npx @ibr-foundation/ibr install path/to/project
 ```
 
-Then invoke `/ibr` or `/invariants` in Claude Code, or read `IBR.md` directly.
+Then invoke `/ibr`, `/ibr-code-invariants`, `/ibr-code-testing`, `/ibr-code-review` or
+`/ibr-code-standards` in Claude Code, or read `IBR.md` directly.
+
+**Upgrading from 0.11 or earlier:** `/invariants` is now `/ibr-code-invariants` and
+`/invariant-spec-tests` is now `/ibr-code-testing`. The installer adds the new folders and
+tells you about the old ones; remove those when you no longer need them. Existing
+contracts keep working: the checker still reads earlier field names such as
+`Impossible if true`.
 
 Other agents receive the framework manual (`IBR.md`) in their native instruction format:
 
@@ -99,18 +117,47 @@ what was eliminated, what survived, what it forbids — ask *"show me the reduct
 
 ### Keep a codebase's invariants
 
-`/invariants` records a project's load-bearing rules as `*.invariants.md` contracts and
-checks changes against them — cheapest before you build:
+`/ibr-code-invariants` records a project's load-bearing rules as `*.invariants.md`
+contracts and checks changes against them — cheapest before you build:
 
 ```text
-/invariants Before I build this, does it break anything? [describe the change]
-/invariants check this diff
-/invariants bootstrap a contract for src/payments/
+/ibr-code-invariants Before I build this, does it break anything? [describe the change]
+/ibr-code-invariants check this diff
+/ibr-code-invariants bootstrap a contract for src/payments/
 ```
 
 It proposes; it never edits contracts or code without your confirmation.
 
-## Run the invariants checker
+### Write tests that prove the contract
+
+`/ibr-code-testing` writes and reviews tests as specs of that contract: one test per
+claim, named for the property it proves, with a test that must fail on the defect before
+it is trusted.
+
+```text
+/ibr-code-testing write the tests for this module's invariants
+/ibr-code-testing review these tests — which claims are unproven?
+```
+
+### Review and score a codebase
+
+`/ibr-code-review` asks whether you want a one-off review or a stored one that follows a
+module's review profile. Each record is scored from 0 to 5 on six parameters (Verified,
+Unity, Proof, Falsifiable, Observed, Anchored); open findings cap the score, so a high
+number never hides a serious defect.
+
+```text
+/ibr-code-review review the payments module
+/ibr-code-review hill climb the query engine to 95%
+```
+
+### Hold code to the standards
+
+`/ibr-code-standards` holds coding standards as invariant records. Follow them when
+writing, use their review questions when reviewing, and copy the ones a project adopts
+into its own contract.
+
+## Run the contract checker
 
 The checker is a single-file Node script (>=18, no dependencies):
 

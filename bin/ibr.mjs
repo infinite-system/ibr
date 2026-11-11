@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 // CLI for the IBR package.
 //
+// Canonical source: tools/ibr-release-installer.mjs in the IBR vault. tools/sync-release.sh
+// copies it to bin/ibr.mjs in the package; never edit bin/ibr.mjs directly.
+//
 //   npx @ibr-foundation/ibr install [target] [vendor flags]   install the framework
-//   npx @ibr-foundation/ibr check [args...]                   run the invariants checker
+//   npx @ibr-foundation/ibr check [args...]                   run the ibr-code-invariants checker
 //   npx @ibr-foundation/ibr help                              usage
 //
 // Zero dependencies. The skills and framework doc ship alongside this file.
@@ -12,6 +15,7 @@ import {
   cpSync,
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   writeFileSync,
 } from 'node:fs';
@@ -24,6 +28,21 @@ const packageVersion = JSON.parse(
   readFileSync(join(packageRoot, 'package.json'), 'utf8'),
 ).version;
 
+// The skills this package ships are the folders under skills/ that hold a SKILL.md, so
+// this list cannot disagree with what the package contains.
+const shippedSkills = existsSync(skillsRoot)
+  ? readdirSync(skillsRoot, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && existsSync(join(skillsRoot, entry.name, 'SKILL.md')))
+      .map((entry) => entry.name)
+      .sort((first, second) => (first === 'ibr' ? -1 : second === 'ibr' ? 1 : first.localeCompare(second)))
+  : [];
+
+// Skills that earlier versions installed under another name.
+const renamedSkills = {
+  invariants: 'ibr-code-invariants',
+  'invariant-spec-tests': 'ibr-code-testing',
+};
+
 const [command, ...commandArguments] = process.argv.slice(2);
 
 function usage() {
@@ -31,10 +50,10 @@ function usage() {
 
   ibr install [target] [flags]
       Install IBR for coding agents into <target> (default: current directory).
-      Claude is the native format — the full /ibr and /invariants skills,
+      Claude is the native format — the full skills (${shippedSkills.map((skill) => '/' + skill).join(', ')}),
       scripts and checker included. Other vendors receive the framework
       manual (IBR.md) in their native instruction format:
-        (none) / --claude   .claude/skills/{ibr,invariants}/
+        (none) / --claude   .claude/skills/{${shippedSkills.join(',')}}/
         --cursor            .cursor/rules/ibr.mdc
         --copilot           .github/instructions/ibr.instructions.md
         --agents / --codex  a managed section in AGENTS.md (Codex CLI,
@@ -46,7 +65,7 @@ function usage() {
         --force             overwrite locally modified copies
 
   ibr check [args...]
-      Run the invariants contract checker. Args pass through,
+      Run the ibr-code-invariants contract checker. Args pass through,
       e.g. 'ibr check --all' or 'ibr check --refs'.
 
   ibr help              Show this message.
@@ -74,7 +93,7 @@ function install(installArguments) {
   const frameworkText = readFileSync(frameworkPath, 'utf8');
 
   // Write one single-file target idempotently; refuse to clobber local edits
-  // without --force (ivue's installer discipline, ported).
+  // without --force.
   function installFile(relativePath, content, label) {
     const targetPath = join(targetRoot, relativePath);
     if (existsSync(targetPath)) {
@@ -119,11 +138,9 @@ function install(installArguments) {
   if (wantClaude) {
     const destination = join(targetRoot, '.claude', 'skills');
     mkdirSync(destination, { recursive: true });
-    for (const skillName of ['ibr', 'invariants']) {
+    if (shippedSkills.length === 0) fail(`no skills found in the package at ${skillsRoot}`);
+    for (const skillName of shippedSkills) {
       const sourceDirectory = join(skillsRoot, skillName);
-      if (!existsSync(sourceDirectory)) {
-        fail(`bundled skill '${skillName}' missing from package at ${sourceDirectory}`);
-      }
       // Clobber guard on the skill's manifest: a locally modified SKILL.md
       // means the user customized the skill — keep theirs without --force.
       const installedManifest = join(destination, skillName, 'SKILL.md');
@@ -140,6 +157,16 @@ function install(installArguments) {
       }
       cpSync(sourceDirectory, join(destination, skillName), { recursive: true });
       console.log(`ibr: skill '${skillName}' installed -> ${join(destination, skillName)}`);
+    }
+    // An earlier version may have installed a skill under its old name. Say so, and leave
+    // the folder for the user to remove: it may hold their own edits.
+    for (const [oldName, newName] of Object.entries(renamedSkills)) {
+      if (existsSync(join(destination, oldName, 'SKILL.md'))) {
+        console.log(
+          `ibr: '${join(destination, oldName)}' is from an earlier version; the skill is now '${newName}'.\n` +
+            '     Remove the old folder when you no longer need it.',
+        );
+      }
     }
   }
 
@@ -201,7 +228,12 @@ function install(installArguments) {
 }
 
 function check(checkArguments) {
-  const checkerScript = join(skillsRoot, 'invariants', 'scripts', 'check_invariants.mjs');
+  const checkerScript = join(
+    skillsRoot,
+    'ibr-code-invariants',
+    'scripts',
+    'ibr-code-invariants-check.mjs',
+  );
   if (!existsSync(checkerScript)) {
     fail(`checker missing from package at ${checkerScript}`);
   }

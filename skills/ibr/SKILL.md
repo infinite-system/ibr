@@ -49,12 +49,12 @@ Read it completely. It is the method authority; this file only governs invocatio
 
 ## Companion
 
-- `/invariants` — IBR operationalized for codebases: audits changes against a project's
+- `/ibr-code-invariants` — IBR operationalized for codebases: audits changes against a project's
   recorded invariant contracts (`*.invariants.md`), with its own checker, annotation, and
-  audit machinery. **Route by target:** a codebase or architecture → `/invariants`;
+  audit machinery. **Route by target:** a codebase or architecture → `/ibr-code-invariants`;
   anything else → `/ibr`.
-- The handoff runs both ways. `/invariants` names this skill as its method authority for
+- The handoff runs both ways. `/ibr-code-invariants` names this skill as its method authority for
   contested verdicts and deep reductions. In the other direction: when an `/ibr` reduction
   lands on a load-bearing rule **about code**, do not leave it in conversation — switch to
-  `/invariants` and propose it as a `discovered` contract record, where it gains
+  `/ibr-code-invariants` and propose it as a `discovered` contract record, where it gains
   enforcement instead of evaporating when the session ends.
