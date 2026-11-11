@@ -20,8 +20,10 @@ as "Copies of a rule drift apart" or "Readers rebuild what the code does not say
 
 | Standard | In one line |
 | --- | --- |
+| Every rule has one home | One home per rule, every path through it, serving that rule only |
 | Names unfold to the domain | No single letters or abbreviations, in code, tests and templates |
 | A rule is stated once and used by name | Define a condition once; guard and read share it |
+| Shared code serves one job | No flag that switches the core off, no branch for one caller |
 | Sharing waits for the second dependent | No abstraction until two dependents need the same thing |
 | A rule lives at the lowest layer that can say it | Move a rule up a layer only when the lower one cannot say it |
 | Escape hatches are named and checked | Every bypass in one named place, with its reason and its check |
@@ -37,7 +39,16 @@ as "Copies of a rule drift apart" or "Readers rebuild what the code does not say
 ## Using the standards
 
 - **Writing code:** follow the records. Where a record's `Rules out` describes
-  what you are about to write, stop.
+  what you are about to write, stop. Before writing any rule (a condition, a calculation,
+  a check), decide its home:
+  1. **Search for an existing home.** If it serves your need unchanged, use it.
+  2. **If using it would need a flag that switches its core off, or a branch for your
+     caller,** do not reuse it. Find the part you and its other callers really share,
+     make that the home, and build each caller's own behaviour on top.
+  3. **If there is no home yet,** write the rule where it is needed. Extract it when a
+     second dependent needs the same thing, cut at what the two have in common.
+  4. **Route every path through the home.** A path that cannot is an escape hatch: name
+     it and give it a check.
 - **Reviewing code:** each record's `Verification` is the review question. A violation is a
   finding, with the record's name.
 - **Adopting them in a project:** copy the records the project adopts into its own contract

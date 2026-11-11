@@ -216,7 +216,83 @@ and varies between readers.
 
 **Last refined:** 2026-11-11
 
+### Code shared by two jobs couples them
+
+**Invariant:** If one piece of code serves callers that need different things, then a
+change made for one caller can break another, and the code grows a branch or a flag for
+each difference.
+
+**Scope:** Shared functions, modules, components and services.
+
+**Mechanism:** The callers share the code but not the need, so every difference between
+the needs has to be settled inside the shared code.
+
+**Rules out:**
+
+- Shared code serving two different needs that never grows a flag or branch for either.
+
+**Evidence:** Example: a scrollable viewport with momentum, reused by a text input that
+passes `disableMomentum` and `hideScrollbar` because it needs neither.
+
+**Verification:** Inspection: list the flags and caller-specific branches in shared code.
+
+**Status:** established
+
+**Last refined:** 2026-11-11
+
 ## Chosen invariants
+
+### Every rule has one home
+
+**Goal:** Code is written so that each rule can be found, changed and trusted in one place,
+from the first line, not repaired later in review.
+
+**Invariant:** If code implements a rule, then the rule has exactly one home, every path to
+the result it forbids passes through that home, and the home serves that rule and no other
+job.
+
+**Scope:** All code, while it is written as much as when it is reviewed.
+
+**Components:**
+
+- [A rule is stated once and used by name](#a-rule-is-stated-once-and-used-by-name) — no
+  duplication: one home, not two.
+- [Shared code serves one job](#shared-code-serves-one-job) — no over-unification: the home
+  is not bent to serve different needs.
+- [Escape hatches are named and checked](#escape-hatches-are-named-and-checked) — no way
+  around: every path goes through the home, or is named and checked.
+- [Sharing waits for the second dependent](#sharing-waits-for-the-second-dependent) — when
+  a home becomes shared: at the second dependent, cut at what the two have in common.
+
+**Stands on:**
+
+- [Copies of a rule drift apart](#copies-of-a-rule-drift-apart) — two homes drift.
+- [Code shared by two jobs couples them](#code-shared-by-two-jobs-couples-them) — a home
+  serving two jobs couples them.
+- [A guarantee covers only the paths through its check](#a-guarantee-covers-only-the-paths-through-its-check)
+  — a path around the home is not covered.
+
+**Mechanism:** Duplication, over-unification and ways around are three failures of one
+property, and fixing one by causing another does not help: merging copies into a home that
+needs a mode flag trades duplication for over-unification. The way to hold all three is to
+decide, before writing a rule, where its home is.
+
+**Rules out:**
+
+- A rule implemented in two places.
+- Shared code with a flag that switches its main behaviour off for one caller.
+- A path that produces a forbidden result without passing through the rule's home.
+
+**Evidence:** Example: a text input needs the row virtualization a scrollable viewport has,
+but not its momentum or its scrollbar. The shared home becomes the virtualized row list,
+used by both, rather than the viewport with two flags to switch its core off.
+
+**Verification:** Review: for each rule the change touches, name its home, the searches
+for copies, any flag or caller branch in the home, and any path around it.
+
+**Status:** established
+
+**Last refined:** 2026-11-11
 
 ### Names unfold to the domain
 
@@ -295,6 +371,46 @@ adding a function, search for an existing one and reuse or extend it.
 
 **Verification:** Review: for each condition in the change, search for the same logic
 elsewhere.
+
+**Status:** established
+
+**Last refined:** 2026-11-11
+
+### Shared code serves one job
+
+**Goal:** Every caller can rely on all of a shared piece of code, so changing it for one
+caller never breaks another.
+
+**Invariant:** If code is shared, then every caller uses its core behaviour; no caller
+needs a mode flag that switches the core off, or a branch written for that caller alone.
+An option that adjusts a side detail, such as a size or a label, is fine.
+
+**Scope:** Shared functions, modules, components and services, and every decision to reuse
+one.
+
+**Stands on:**
+
+- [Code shared by two jobs couples them](#code-shared-by-two-jobs-couples-them) — a flag
+  or a caller branch is where two jobs meet inside one home.
+- [One dependent cannot show what is shared](#one-dependent-cannot-show-what-is-shared) —
+  the part two callers really share is smaller than the code they first reuse.
+
+**Mechanism:** A caller that has to switch the core off shows that the home was chosen by
+surface similarity, not by what the callers share. Split at the part both use, and each
+caller adds its own behaviour on top.
+
+**Rules out:**
+
+- A flag that turns off the main behaviour, such as `disableMomentum` on a viewport whose
+  point is momentum.
+- `if (caller === …)` or an equivalent branch inside shared code.
+- A caller that uses one part of a shared module and turns the rest off.
+
+**Evidence:** Example: a viewport reused by a text input through `disableMomentum` and
+`hideScrollbar`, replaced by a shared virtualized row list that both use unchanged.
+
+**Verification:** Review: for each reuse in the change, list the flags and options it
+passes, and check that none switches the core off.
 
 **Status:** established
 
